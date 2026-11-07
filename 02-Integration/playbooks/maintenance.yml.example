@@ -1,0 +1,10 @@
+---
+# maintenance.yml — SCAFFOLD (Phase 2 GATED). NOT for production use as-is.
+# Preconditions: Phase 1 PASS in ../../INSTALLATION_REPORT.md; syntax/inventory/SSH validated; staging tested; backups verified; approvals for prod/DB changes.
+- name: "SCAFFOLD - maintenance (do not run before gate)"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Gate reminder
+      ansible.builtin.debug:
+        msg: "SCAFFOLD ONLY. Implement after Phase 1 PASS, test in staging, record results. No secrets in Git. No prod DB/module upgrade without approval + restorable backup."

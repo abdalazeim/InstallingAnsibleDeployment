@@ -1,0 +1,6 @@
+# Example inventory (SCAFFOLD) — replace with real hosts after Phase 1 PASS. No secrets.
+# [odoo_servers]
+# odoo-staging ansible_host=10.0.0.10 ansible_user=deploy
+
+[local]
+localhost ansible_connection=local

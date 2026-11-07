@@ -1,0 +1,15 @@
+# ansible.cfg — SCAFFOLD ONLY (Phase 2, gated)
+# Do NOT use for production changes until Phase 1 PASS and settings are reviewed.
+# Keep secrets in Vault; do not disable host key checking in production without review.
+[defaults]
+inventory = inventories/development/hosts.ini
+roles_path = roles
+collections_paths = collections:~/.ansible/collections:/usr/share/ansible/collections
+host_key_checking = True
+retry_files_enabled = False
+interpreter_python = auto_silent
+# vault_password_file = vault/.vault_pass  # optional, local only, never commit
+
+[privilege_escalation]
+# become = True  # enable per-play/role with least privilege; review sudoers
+become_method = sudo

@@ -1,0 +1,2 @@
+# 02-Integration/inventories — GATED (after Phase 1 PASS)
+Separate environments: `development/`, `staging/`, `production/`. Keep host/group vars isolated; protect sensitive values (Vault). **Do not populate with real secrets.** Validate inventory and SSH connectivity before any playbook execution.

@@ -1,0 +1,2 @@
+# Phase 2 docs (GATED) — create after Phase 1 PASS and during integration
+Required (Arabic explanation, keep Ansible commands/modules in English): `INTEGRATION_GUIDE.md`, `PLAYBOOKS_GUIDE.md`, `INVENTORY_GUIDE.md`, `SECURITY_GUIDE.md`, `ODOO_DEPLOYMENT_GUIDE.md`, `JENKINS_INTEGRATION_GUIDE.md`, `TROUBLESHOOTING.md`, `IMPLEMENTATION_REPORT.md`. Record only executed tests and actual results.
