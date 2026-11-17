@@ -1,0 +1,10 @@
+---
+- name: Traefik Configuration
+  hosts: web_servers
+  become: true
+  gather_facts: true
+  tags: [traefik]
+  
+  roles:
+    - role: traefik
+      tags: [traefik]

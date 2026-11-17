@@ -1,0 +1,60 @@
+---
+- name: Maintenance Mode
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [maintenance]
+  
+  tasks:
+    - name: Set maintenance banner
+      copy:
+        content: "System is in maintenance mode. Please try again later."
+        dest: /etc/motd
+        mode: '0644'
+      notify: update motd
+
+    - name: Stop non-essential services
+      service:
+        name: "{{ item }}"
+        state: stopped
+      loop: "{{ maintenance_stop_services | default([]) }}"
+      ignore_errors: true
+
+    - name: Display maintenance message
+      debug:
+        msg: "System is now in maintenance mode"
+
+    - name: Cleanup Docker resources
+      docker_prune:
+        all: true
+        containers: true
+        images: true
+        volumes: true
+        networks: false
+      when: docker_cleanup | default(false)
+
+    - name: Rotate logs
+      command: logrotate /etc/logrotate.conf
+      when: logrotate_cleanup | default(false)
+      changed_when: false
+
+    - name: Remove maintenance banner
+      copy:
+        content: ""
+        dest: /etc/motd
+        mode: '0644'
+      notify: update motd
+      when: maintenance_end | default(false)
+
+    - name: Start services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ maintenance_stop_services | default([]) }}"
+      when: maintenance_end | default(false)
+
+    - name: Display end message
+      debug:
+        msg: "Maintenance mode ended"
+      when: maintenance_end | default(false)

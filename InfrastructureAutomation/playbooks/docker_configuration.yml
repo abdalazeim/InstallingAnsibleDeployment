@@ -1,0 +1,44 @@
+---
+- name: Docker Configuration
+  hosts: docker_servers
+  become: true
+  gather_facts: true
+  tags: [docker, config]
+  
+  tasks:
+    - name: Configure Docker networks
+      docker_network:
+        name: "{{ item.name }}"
+        driver: "{{ item.driver | default('bridge') }}"
+        ipam_config:
+          - subnet: "{{ item.subnet | default('') }}"
+        state: present
+      loop: "{{ docker_networks | default([]) }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Manage Docker containers
+      docker_container:
+        name: "{{ item.name }}"
+        image: "{{ item.image }}"
+        state: "{{ item.state | default('started') }}"
+        ports: "{{ item.ports | default([]) }}"
+        volumes: "{{ item.volumes | default([]) }}"
+        env: "{{ item.env | default({}) }}"
+        networks:
+          - name: "{{ item.network | default('bridge') }}"
+        restart_policy: "{{ item.restart_policy | default('always') }}"
+      loop: "{{ docker_containers | default([]) }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Display Docker containers
+      docker_container_info:
+      register: docker_containers_info
+
+    - name: Show container status
+      debug:
+        msg: "{{ item.Name }}: {{ item.State }}"
+      loop: "{{ docker_containers_info.containers }}"
+      loop_control:
+        label: "{{ item.Name }}"

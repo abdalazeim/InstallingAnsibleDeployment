@@ -1,0 +1,25 @@
+# Health Report - Generated {{ ansible_date_time.epoch }}
+Host: {{ ansible_hostname }}
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+Kernel: {{ ansible_kernel }}
+
+## System Resources
+- CPU Cores: {{ ansible_processor_count }}
+- Total RAM: {{ ansible_memory_mb.real }} MB
+- Free RAM: {{ ansible_memfree_mb }} MB
+- Disk Usage:
+{% for mount in ansible_mounts %}
+  - {{ mount.device }}: {{ (mount.size_total * 100 / (mount.size_total - mount.size_available)) | round(1) }}% used ({{ (mount.size_available / 1073741824) | round(2) }} GB free)
+{% endfor %}
+
+## Network
+- Hostname: {{ ansible_hostname }}
+- IP: {{ ansible_default_ipv4.address | default('N/A') }}
+
+## Services
+{% for service in ['docker', 'postgresql', 'traefik', 'fail2ban'] %}
+- {{ service }}: {{ service_facts.ansible_facts.services[service].state | default('not running') }}
+{% endfor %}
+
+## Report Generated
+{{ ansible_date_time.iso8601 }}

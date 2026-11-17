@@ -1,0 +1,66 @@
+---
+- name: Health Check
+  hosts: all
+  become: false
+  gather_facts: true
+  tags: [health, check]
+  
+  tasks:
+    - name: Check system resources
+      ansible.builtin.debug:
+        msg:
+          - "CPU Usage: {{ 100 - ansible_cpu_idle | default(0) }}%"
+          - "RAM Usage: {{ ((ansible_memory_mb.real - ansible_memfree_mb) * 100 / ansible_memory_mb.real) | round(1) }}%"
+          - "Disk Usage: {{ ansible_mounts | map(attribute='size_total') | list | join(', ') }}"
+
+    - name: Check running services
+      service_facts:
+      register: service_facts
+
+    - name: Display critical services status
+      ansible.builtin.debug:
+        msg: "{{ item }}: {{ service_facts.ansible_facts.services[item].state | default('not found') }}"
+      loop:
+        - docker
+        - postgresql
+        - traefik
+        - fail2ban
+      ignore_errors: true
+
+    - name: Check network connectivity
+      wait_for:
+        host: "{{ item.host | default('8.8.8.8') }}"
+        port: "{{ item.port | default(53) }}"
+        timeout: 5
+      loop: "{{ network_checks | default([]) }}"
+      loop_control:
+        label: "{{ item.host | default('8.8.8.8') }}:{{ item.port | default(53) }}"
+      ignore_errors: true
+
+    - name: Check Odoo services
+      uri:
+        url: "http://127.0.0.1:{{ odoo_port | default(8069) }}"
+        method: GET
+        status: 200
+      register: odoo_health
+      when: odoo_check | default(false)
+      ignore_errors: true
+
+    - name: Check Django services
+      uri:
+        url: "http://127.0.0.1:{{ django_gunicorn_port | default(8000) }}{{ django_health_check | default('/health') }}"
+        method: GET
+        status: 200
+      register: django_health
+      when: django_check | default(false)
+      ignore_errors: true
+
+    - name: Generate health report
+      template:
+        src: health-report.j2
+        dest: /tmp/health-report-{{ ansible_date_time.epoch }}.txt
+        mode: '0644'
+
+    - name: Display health report
+      debug:
+        msg: "Health report generated at /tmp/health-report-{{ ansible_date_time.epoch }}.txt"

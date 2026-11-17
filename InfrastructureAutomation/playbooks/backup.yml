@@ -1,0 +1,55 @@
+---
+- name: System Backup
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [backup]
+  
+  tasks:
+    - name: Create backup directory
+      file:
+        path: "{{ backup_dir | default('/var/backups') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Backup system configuration
+      archive:
+        path: /etc
+        dest: "{{ backup_dir | default('/var/backups') }}/etc-backup-{{ ansible_date_time.epoch }}.tar.gz"
+        format: gz
+
+    - name: Backup application data
+      archive:
+        path:
+          - /opt
+          - /var/lib
+        dest: "{{ backup_dir | default('/var/backups') }}/app-backup-{{ ansible_date_time.epoch }}.tar.gz"
+        format: gz
+        exclude_path:
+          - /var/lib/docker
+          - /var/lib/postgresql
+
+    - name: Clean old backups
+      find:
+        paths: "{{ backup_dir | default('/var/backups') }}"
+        age: "-{{ backup_retention_days | default(7) }}d"
+        age_suffix: "-"
+        recurse: true
+      register: old_backups
+
+    - name: Remove old backups
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ old_backups.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Display backup summary
+      debug:
+        msg:
+          - "Backup completed at: {{ ansible_date_time.epoch }}"
+          - "Backup directory: {{ backup_dir | default('/var/backups') }}"
+          - "Old backups removed: {{ old_backups.files | length }}"

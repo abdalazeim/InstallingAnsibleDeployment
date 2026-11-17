@@ -1,0 +1,10 @@
+---
+- name: Django Application Deployment
+  hosts: web_servers
+  become: true
+  gather_facts: true
+  tags: [django]
+  
+  roles:
+    - role: django
+      tags: [django]

@@ -1,0 +1,44 @@
+---
+- name: System Restore
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [restore]
+  
+  vars_prompt:
+    - name: backup_file
+      prompt: "Enter backup file name (or full path)"
+      private: false
+  
+  tasks:
+    - name: Validate backup file
+      stat:
+        path: "{{ backup_file }}"
+      register: backup_stat
+
+    - name: Fail if backup not found
+      fail:
+        msg: "Backup file not found: {{ backup_file }}"
+      when: not backup_stat.stat.exists
+
+    - name: Extract backup
+      unarchive:
+        src: "{{ backup_file }}"
+        dest: /tmp/restore-{{ ansible_date_time.epoch }}
+        remote_src: true
+
+    - name: Restore system configuration
+      shell: |
+        cp -rf /tmp/restore-{{ ansible_date_time.epoch }}/etc/* /etc/ 2>/dev/null || true
+        cp -rf /tmp/restore-{{ ansible_date_time.epoch }}/opt/* /opt/ 2>/dev/null || true
+        cp -rf /tmp/restore-{{ ansible_date_time.epoch }}/var/lib/* /var/lib/ 2>/dev/null || true
+      changed_when: false
+
+    - name: Cleanup restore directory
+      file:
+        path: /tmp/restore-{{ ansible_date_time.epoch }}
+        state: absent
+
+    - name: Display restore summary
+      debug:
+        msg: "Restore completed from {{ backup_file }} at {{ ansible_date_time.epoch }}"
