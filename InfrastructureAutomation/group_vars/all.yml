@@ -1,0 +1,78 @@
+---
+# Global variables for all environments
+ansible_user: odoo
+ansible_become: true
+ansible_become_method: sudo
+
+# OS
+os_packages_update: true
+os_packages_upgrade: true
+os_reboot_if_required: false
+
+# SSH
+ssh_port: 22
+ssh PermitRootLogin: prohibit-password
+ssh PasswordAuthentication: false
+ssh PubkeyAuthentication: true
+
+# Firewall
+ufw_enabled: true
+ufw_allow_ssh: true
+ufw_allow_http: true
+ufw_allow_https: true
+
+# Monitoring
+monitoring_enabled: true
+monitoring_interval: 300
+
+# Docker
+docker_install_compose: true
+docker_install_buildx: true
+docker_install_qemu: true
+
+# Odoo
+odoo17_version: "17.0"
+odoo19_version: "19.0"
+odoo_admin_password: "{{ vault_odoo_admin_password }}"
+odoo_db_name: "odoo_db"
+odoo_db_user: "odoo_db_user"
+odoo_db_password: "{{ vault_odoo_db_password }}"
+
+# PostgreSQL
+postgresql_version: "15"
+postgresql_admin_user: "postgres"
+postgresql_admin_password: "{{ vault_postgresql_admin_password }}"
+postgresql_backup_dir: "/var/backups/postgresql"
+postgresql_backup_retention_days: 7
+
+# Traefik
+traefik_version: "v3.x"
+traefik_api_dashboard: false
+traefik_letsencrypt_email: "admin@example.com"
+traefik_acme_storage: "/etc/traefik/acme.json"
+
+# Django
+django_app_dir: "/opt/django_app"
+django_venv_dir: "/opt/django_venv"
+django_gunicorn_user: "django"
+django_gunicorn_group: "django"
+django_media_dir: "/opt/django_app/media"
+django_static_dir: "/opt/django_app/static"
+
+# Backup
+backup_dir: "/var/backups"
+backup_retention_days: 7
+backup_compress: true
+
+# Jenkins
+jenkins_url: "http://localhost:8080"
+jenkins_user: "admin"
+jenkins_token: "{{ vault_jenkins_token }}"
+
+# Common collections
+ansible_collections:
+  - community.docker
+  - community.general
+  - ansible.posix
+  - community.postgresql
+  - ansible.utils

@@ -1,0 +1,29 @@
+---
+# Common role defaults
+common_packages:
+  - curl
+  - wget
+  - htop
+  - iotop
+  - ntp
+  - unattended-upgrades
+  - logrotate
+  - rsync
+
+ntp_servers:
+  - pool.ntp.org
+  - time.ubuntu.com
+
+ssh_allowed_users:
+  - odoo
+  - deploy
+
+ufw_allowed_ports:
+  - 22
+  - 80
+  - 443
+
+monitoring_commands:
+  cpu: "top -bn1 | grep '%Cpu'"
+  ram: "free -h"
+  disk: "df -h"

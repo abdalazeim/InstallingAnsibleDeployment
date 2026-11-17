@@ -1,0 +1,83 @@
+---
+# Common role: system updates, packages, SSH, firewall, monitoring
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_validtime: 3600
+  when: os_packages_update | default(true)
+
+- name: Install common packages
+  apt:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Configure NTP
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    mode: '0644'
+  notify: restart ntp
+  when: ntp_servers | length > 0
+
+- name: Configure SSH
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    mode: '0600'
+  notify: restart sshd
+
+- name: Configure UFW firewall
+  ufw:
+    state: enabled
+    policy: deny
+  when: ufw_enabled | default(true)
+
+- name: Allow SSH through firewall
+  ufw:
+    port: "{{ ssh_port }}"
+    proto: tcp
+    state: allowed
+  when: ufw_enabled | default(true) and ufw_allow_ssh | default(true)
+
+- name: Allow HTTP through firewall
+  ufw:
+    port: "80"
+    proto: tcp
+    state: allowed
+  when: ufw_enabled | default(true) and ufw_allow_http | default(true)
+
+- name: Allow HTTPS through firewall
+  ufw:
+    port: "443"
+    proto: tcp
+    state: allowed
+  when: ufw_enabled | default(true) and ufw_allow_https | default(true)
+
+- name: Enable unattended-upgrades
+  template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: '0644'
+  when: os_packages_upgrade | default(true)
+
+- name: Set up logrotate for common services
+  template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/infrastructure
+    mode: '0644'
+  when: monitoring_enabled | default(true)
+
+- name: Create monitoring script
+  template:
+    src: monitor.sh.j2
+    dest: /usr/local/bin/monitor.sh
+    mode: '0755'
+  when: monitoring_enabled | default(true)
+
+- name: Ensure monitoring cron job
+  cron:
+    name: "system monitoring"
+    minute: "*/{{ monitoring_interval | default(300) }}"
+    job: "/usr/local/bin/monitor.sh >> /var/log/monitoring.log 2>&1"
+    user: root
+  when: monitoring_enabled | default(true)

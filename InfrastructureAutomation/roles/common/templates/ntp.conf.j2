@@ -1,0 +1,7 @@
+server {{ ntp_servers[0] }} iburst
+{% for server in ntp_servers[1:] %}
+server {{ server }} iburst
+{% endfor %}
+restrict default nomodify notrap noquery
+restrict 127.0.0.1
+restrict ::1
