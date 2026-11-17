@@ -1,0 +1,6 @@
+# Managed by Ansible
+{% for user in system_users | default([]) %}
+{% if user.sudo_access | default(false) %}
+{{ user.username }} ALL=(ALL) NOPASSWD:ALL
+{% endif %}
+{% endfor %}

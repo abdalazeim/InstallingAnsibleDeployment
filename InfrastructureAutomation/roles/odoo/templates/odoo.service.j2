@@ -1,0 +1,17 @@
+[Unit]
+Description=Odoo {{ odoo_version }} Server
+Documentation=https://www.odoo.com
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User={{ odoo_user | default('odoo') }}
+Group={{ odoo_user | default('odoo') }}
+ExecStart={{ odoo_install_dir | default('/opt/odoo/' + odoo_version) }}/odoo-bin -c /etc/odoo/odoo.conf
+WorkingDirectory={{ odoo_install_dir | default('/opt/odoo/' + odoo_version) }}
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

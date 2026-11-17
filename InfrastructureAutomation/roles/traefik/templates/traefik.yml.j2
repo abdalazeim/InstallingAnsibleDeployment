@@ -1,0 +1,32 @@
+---
+# Traefik global configuration
+api:
+  dashboard: {{ traefik_api_dashboard | default(false) }}
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "{{ traefik_letsencrypt_email | default('admin@example.com') }}"
+      storage: "{{ traefik_acme_storage | default('/etc/traefik/acme.json') }}"
+      keyType: EC2P256
+      dnsChallenge:
+        provider: "{{ traefik_dns_provider | default('cloudflare') }}"
+        env:
+          CF_API_TOKEN: "{{ vault_cf_api_token | default('') }}"

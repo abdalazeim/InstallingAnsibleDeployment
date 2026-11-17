@@ -1,0 +1,64 @@
+---
+# Traefik role: reverse proxy, SSL, routing
+- name: Create Traefik directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/traefik
+    - /etc/traefik/acme
+    - /etc/traefik/dynamic
+    - /var/log/traefik
+
+- name: Deploy Traefik configuration
+  template:
+    src: traefik.yml.j2
+    dest: /etc/traefik/traefik.yml
+    mode: '0644'
+
+- name: Deploy dynamic configuration
+  template:
+    src: dynamic.yml.j2
+    dest: /etc/traefik/dynamic.yml
+    mode: '0644'
+
+- name: Deploy Traefik systemd service
+  template:
+    src: traefik.service.j2
+    dest: /etc/systemd/system/traefik.service
+    mode: '0644'
+  notify: reload systemd
+
+- name: Install Traefik
+  get_url:
+    url: "https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_linux_amd64.tar.gz"
+    dest: /tmp/traefik.tar.gz
+    mode: '0644'
+  register: traefik_download
+
+- name: Extract Traefik
+  unarchive:
+    src: /tmp/traefik.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts: "--strip-components=1"
+  when: traefik_download.changed
+
+- name: Ensure Traefik service is running
+  service:
+    name: traefik
+    state: started
+    enabled: true
+
+- name: Wait for Traefik
+  wait_for:
+    port: 8080
+    host: 127.0.0.1
+    timeout: 30
+
+- name: Display Traefik status
+  debug:
+    msg: "Traefik is running on port 8080 (dashboard) and 80/443 (routers)"

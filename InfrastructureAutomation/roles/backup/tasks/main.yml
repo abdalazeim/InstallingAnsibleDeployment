@@ -1,0 +1,64 @@
+---
+# Backup role: backup and restore tasks
+- name: Create backup directory
+  file:
+    path: "{{ backup_dir | default('/var/backups') }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create backup script
+  template:
+    src: backup.sh.j2
+    dest: /usr/local/bin/backup.sh
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create restore script
+  template:
+    src: restore.sh.j2
+    dest: /usr/local/bin/restore.sh
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Set up backup cron
+  cron:
+    name: "System backup"
+    minute: "0"
+    hour: "{{ backup_hour | default(2) }}"
+    job: "/usr/local/bin/backup.sh >> /var/log/backup.log 2>&1"
+    user: root
+  when: backup_cron_enabled | default(true)
+
+- name: Clean old backups
+  find:
+    paths: "{{ backup_dir | default('/var/backups') }}"
+    age: "-{{ backup_retention_days | default(7) }}d"
+    age_suffix: "-"
+    recurse: true
+  register: old_backups
+
+- name: Remove old backups
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ old_backups.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Create backup manifest
+  template:
+    src: backup-manifest.j2
+    dest: "{{ backup_dir | default('/var/backups') }}/manifest.json"
+    mode: '0644'
+  when: backup_manifest | default(true)
+
+- name: Display backup info
+  debug:
+    msg:
+      - "Backup directory: {{ backup_dir | default('/var/backups') }}"
+      - "Retention: {{ backup_retention_days | default(7) }} days"
+      - "Compression: {{ backup_compress | default(true) }}"

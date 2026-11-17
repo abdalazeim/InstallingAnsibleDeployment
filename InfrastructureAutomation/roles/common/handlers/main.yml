@@ -1,0 +1,17 @@
+- name: restart sshd
+  service:
+    name: ssh
+    state: restarted
+    enabled: true
+
+- name: restart ntp
+  service:
+    name: ntp
+    state: restarted
+    enabled: true
+
+- name: restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted
+    enabled: true

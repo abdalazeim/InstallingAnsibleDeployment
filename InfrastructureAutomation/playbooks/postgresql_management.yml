@@ -1,0 +1,10 @@
+---
+- name: PostgreSQL Administration
+  hosts: db_servers
+  become: true
+  gather_facts: true
+  tags: [postgresql]
+  
+  roles:
+    - role: postgresql
+      tags: [postgresql]

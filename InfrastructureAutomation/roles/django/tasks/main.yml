@@ -1,0 +1,118 @@
+---
+# Django role: deployment, Gunicorn, env, media
+- name: Create Django directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ django_gunicorn_user | default('django') }}"
+    group: "{{ django_gunicorn_group | default('django') }}"
+    mode: '0755'
+  loop:
+    - "{{ django_app_dir | default('/opt/django_app') }}"
+    - "{{ django_venv_dir | default('/opt/django_venv') }}"
+    - "{{ django_media_dir | default('/opt/django_app/media') }}"
+    - "{{ django_static_dir | default('/opt/django_app/static') }}"
+
+- name: Create Django user
+  user:
+    name: "{{ django_gunicorn_user | default('django') }}"
+    state: present
+    home: "/home/{{ django_gunicorn_user | default('django') }}"
+    create_home: true
+    system: true
+    shell: /usr/sbin/nologin
+
+- name: Create Python virtual environment
+  pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+    virtualenv: "{{ django_venv_dir | default('/opt/django_venv') }}"
+    state: present
+
+- name: Deploy Django application from git
+  git:
+    repo: "{{ django_repo_url }}"
+    dest: "{{ django_app_dir | default('/opt/django_app') }}"
+    version: "{{ django_branch | default('main') }}"
+    force: "{{ django_force_update | default(false) }}"
+  become_user: "{{ django_gunicorn_user | default('django') }}"
+  notify: restart gunicorn
+
+- name: Install Django dependencies
+  pip:
+    requirements: "{{ django_app_dir | default('/opt/django_app') }}/requirements.txt"
+    virtualenv: "{{ django_venv_dir | default('/opt/django_venv') }}"
+    state: present
+  become_user: "{{ django_gunicorn_user | default('django') }}"
+  notify: restart gunicorn
+
+- name: Deploy environment file
+  template:
+    src: env.j2
+    dest: "{{ django_app_dir | default('/opt/django_app') }}/.env"
+    mode: '0600'
+    owner: "{{ django_gunicorn_user | default('django') }}"
+    group: "{{ django_gunicorn_group | default('django') }}"
+  notify: restart gunicorn
+
+- name: Deploy Django settings
+  template:
+    src: settings.py.j2
+    dest: "{{ django_app_dir | default('/opt/django_app') }}/{{ django_project_name | default('myproject') }}/settings.py"
+    mode: '0644'
+    owner: "{{ django_gunicorn_user | default('django') }}"
+    group: "{{ django_gunicorn_group | default('django') }}"
+  notify: restart gunicorn
+
+- name: Run Django migrations
+  command: "{{ django_venv_dir | default('/opt/django_venv') }}/bin/python manage.py migrate"
+  args:
+    chdir: "{{ django_app_dir | default('/opt/django_app') }}"
+  become_user: "{{ django_gunicorn_user | default('django') }}"
+  environment:
+    DJANGO_SETTINGS_MODULE: "{{ django_project_name | default('myproject') }}.settings"
+  notify: restart gunicorn
+
+- name: Collect Django static files
+  command: "{{ django_venv_dir | default('/opt/django_venv') }}/bin/python manage.py collectstatic"
+  args:
+    chdir: "{{ django_app_dir | default('/opt/django_app') }}"
+    becomes: false
+  become_user: "{{ django_gunicorn_user | default('django') }}"
+  environment:
+    DJANGO_SETTINGS_MODULE: "{{ django_project_name | default('myproject') }}.settings"
+  when: django_collectstatic | default(true)
+  notify: restart gunicorn
+
+- name: Deploy Gunicorn systemd service
+  template:
+    src: gunicorn.service.j2
+    dest: /etc/systemd/system/gunicorn-{{ django_project_name | default('myproject') }}.service
+    mode: '0644'
+  notify: reload systemd
+
+- name: Ensure Gunicorn service is running
+  service:
+    name: "gunicorn-{{ django_project_name | default('myproject') }}"
+    state: started
+    enabled: true
+
+- name: Wait for Gunicorn to start
+  wait_for:
+    port: "{{ django_gunicorn_port | default(8000) }}"
+    host: 127.0.0.1
+    timeout: 30
+
+- name: Test Django application
+  uri:
+    url: "http://127.0.0.1:{{ django_gunicorn_port | default(8000) }}{{ django_health_check | default('/health') }}"
+    method: GET
+    status: 200
+  register: django_health
+  ignore_errors: true
+
+- name: Display Django status
+  debug:
+    msg: "Django application is {{ 'healthy' if django_health.status == 200 else 'unhealthy' }}"

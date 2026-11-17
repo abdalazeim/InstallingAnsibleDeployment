@@ -1,0 +1,32 @@
+---
+# Dynamic routing configuration
+http:
+  routers:
+{% for route in traefik_routes | default([]) %}
+    {{ route.name }}:
+      rule: "{{ route.rule }}"
+      service: {{ route.service }}
+      entryPoints:
+        - "{{ route.entryPoint | default('websecure') }}"
+      tls:
+        certResolver: letsencrypt
+{% endfor %}
+
+  services:
+{% for service in traefik_services | default([]) %}
+    {{ service.name }}:
+      loadBalancer:
+        servers:
+{% for server in service.servers %}
+          - url: "{{ server.url }}"
+{% endfor %}
+{% endfor %}
+
+{% if traefik_middlewares | default([]) %}
+  middlewares:
+{% for mw in traefik_middlewares | default([]) %}
+    {{ mw.name }}:
+      {{ mw.type | default('chain') }}:
+        {{ mw.options | tojson }}
+{% endfor %}
+{% endif %}

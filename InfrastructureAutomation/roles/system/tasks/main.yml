@@ -1,0 +1,101 @@
+---
+# System role: Ubuntu Server Management (high priority)
+- name: Include common role
+  include_role:
+    name: common
+
+- name: Update system packages
+  apt:
+    upgrade: dist
+    update_cache: true
+    state: latest
+  when: os_packages_upgrade | default(true)
+  notify: reboot if required
+
+- name: Check if reboot is required
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required_stat
+
+- name: Reboot if required
+  reboot:
+    msg: "System reboot required after package updates"
+    connect_timeout: 10
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 15
+  when: reboot_required_stat.stat.exists and os_reboot_if_required | default(false)
+
+- name: Configure unattended-upgrades
+  template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    mode: '0644'
+
+- name: Create system users
+  user:
+    name: "{{ item.username }}"
+    state: present
+    group: "{{ item.group | default('users') }}"
+    groups: "{{ item.groups | default('') }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    home: "{{ item.home | default('/home/' + item.username) }}"
+    create_home: true
+    password: "{{ item.password | default('*') }}"
+    update_password: on_create
+  loop: "{{ system_users | default([]) }}"
+  no_log: not (item.no_log | default(false))
+
+- name: Configure sudoers for management users
+  template:
+    src: sudoers.j2
+    dest: "/etc/sudoers.d/{{ item.username }}"
+    mode: '0440'
+  loop: "{{ system_users | default([]) }}"
+  when: item.sudo_access | default(false)
+
+- name: Set up SSH authorized keys
+  authorized_key:
+    user: "{{ item.username }}"
+    key: "{{ item.ssh_key }}"
+    path: "{{ item.home | default('/home/' + item.username) }}/.ssh/authorized_keys"
+    state: present
+  loop: "{{ system_users | default([]) }}"
+  when: item.ssh_key is defined
+
+- name: Configure logrotate for system logs
+  template:
+    src: logrotate-system.j2
+    dest: /etc/logrotate.d/system
+    mode: '0644'
+
+- name: Set up fail2ban
+  apt:
+    name: fail2ban
+    state: present
+  when: fail2ban_enabled | default(true)
+
+- name: Configure fail2ban
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    mode: '0644'
+  when: fail2ban_enabled | default(true)
+  notify: restart fail2ban
+
+- name: Enable fail2ban
+  service:
+    name: fail2ban
+    state: started
+    enabled: true
+  when: fail2ban_enabled | default(true)
+
+- name: Display system info
+  debug:
+    msg:
+      - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      - "Kernel: {{ ansible_kernel }}"
+      - "Uptime: {{ ansible_uptime | default('N/A') }}"
+      - "CPU: {{ ansible_processor_count }} cores"
+      - "RAM: {{ ansible_memtotal_mb }} MB"
+      - "Disk: {{ ansible_mounts | map(attribute='size_total') | list | join(', ') }}"

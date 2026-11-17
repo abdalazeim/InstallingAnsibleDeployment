@@ -1,0 +1,92 @@
+---
+# PostgreSQL role: databases, users, backups, integrity
+- name: Install PostgreSQL
+  apt:
+    name:
+      - postgresql
+      - postgresql-client
+      - postgresql-contrib
+    state: present
+
+- name: Ensure PostgreSQL is running
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Create PostgreSQL users
+  postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    state: present
+    role_attr_flags: "{{ item.role | default('') }}"
+    login_host: "{{ item.host | default('localhost') }}"
+    login_user: "{{ postgresql_admin_user | default('postgres') }}"
+  loop: "{{ postgresql_users | default([]) }}"
+  no_log: not (item.no_log | default(false))
+
+- name: Create PostgreSQL databases
+  postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner | default('postgres') }}"
+    state: present
+    template: "{{ item.template | default('template0') }}"
+    encoding: "{{ item.encoding | default('UTF8') }}"
+    lc_collate: "{{ item.lc_collate | default('en_US.UTF-8') }}"
+    lc_ctype: "{{ item.lc_ctype | default('en_US.UTF-8') }}"
+  loop: "{{ postgresql_databases | default([]) }}"
+
+- name: Configure pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/{{ postgresql_version | default('main') }}/main/pg_hba.conf
+    mode: '0644'
+  notify: reload postgresql
+
+- name: Configure postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/{{ postgresql_version | default('main') }}/main/postgresql.conf
+    mode: '0644'
+  notify: reload postgresql
+
+- name: Create backup directory
+  file:
+    path: "{{ postgresql_backup_dir | default('/var/backups/postgresql') }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0755'
+
+- name: Set up PostgreSQL backup script
+  template:
+    src: pg-backup.sh.j2
+    dest: /usr/local/bin/pg-backup.sh
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Set up backup cron
+  cron:
+    name: "PostgreSQL backup"
+    minute: "0"
+    hour: "{{ postgresql_backup_hour | default(2) }}"
+    job: "/usr/local/bin/pg-backup.sh >> /var/log/postgresql-backup.log 2>&1"
+    user: postgres
+  when: postgresql_backup_enabled | default(true)
+
+- name: Test PostgreSQL connection
+  command: psql -U {{ postgresql_admin_user | default('postgres') }} -c "SELECT 1;"
+  become_user: postgres
+  changed_when: false
+  ignore_errors: true
+
+- name: Check PostgreSQL integrity
+  command: pg_isready
+  become_user: postgres
+  register: pg_isready
+  changed_when: false
+
+- name: Display PostgreSQL status
+  debug:
+    var: pg_isready.stdout

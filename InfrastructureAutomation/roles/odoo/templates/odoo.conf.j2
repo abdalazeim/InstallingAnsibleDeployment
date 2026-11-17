@@ -1,0 +1,35 @@
+; Odoo configuration
+[options]
+; Database
+db_name = {{ odoo_db_name | default('odoo') }}
+db_user = {{ odoo_db_user | default('odoo') }}
+db_password = {{ odoo_db_password | default('odoo') }}
+db_host = {{ odoo_db_host | default('localhost') }}
+db_port = {{ odoo_db_port | default(5432) }}
+
+; Server
+admin = {{ odoo_admin | default('admin') }}
+http_port = {{ odoo_port | default(8069) }}
+long_polling_port = {{ odoo_long_polling_port | default(8072) }}
+proxy_mode = {{ odoo_proxy_mode | default(False) }}
+
+; Data
+data_dir = {{ odoo_data_dir | default('/var/lib/odoo') }}
+addon_path = {{ odoo_addons_dir | default('/opt/odoo/' + odoo_version + '/addons') }}
+
+; Memory
+limit_memory_hard = 268435456
+limit_memory_soft = 134217728
+limit_time_cpu = 60
+limit_time_real = 300
+
+; Logging
+log_level = info
+logfile = /var/log/odoo/odoo.log
+
+; Security
+list_db = False
+; master_password = {{ odoo_master_password | default('') }}
+
+; Email
+from_email = {{ odoo_from_email | default('odoo@example.com') }}

@@ -1,0 +1,22 @@
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "iptables": true,
+  "ip-masq": true,
+  "userland-proxy": false,
+  "registry-mirrors": [
+    "https://mirror.gcr.io"
+  ],
+  "insecure-registries": [],
+  "data-root": "/var/lib/docker",
+  "exec-root": "/var/run/docker",
+  "default-address-pools": [
+    {
+      "base": "172.20.0.0/16",
+      "size": 24
+    }
+  ]
+}

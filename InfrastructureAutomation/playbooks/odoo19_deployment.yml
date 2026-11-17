@@ -1,0 +1,13 @@
+---
+- name: Odoo 19 Deployment
+  hosts: odoo_servers
+  become: true
+  gather_facts: true
+  tags: [odoo, odoo19]
+  
+  vars:
+    odoo_version: "19.0"
+  
+  roles:
+    - role: odoo
+      tags: [odoo]

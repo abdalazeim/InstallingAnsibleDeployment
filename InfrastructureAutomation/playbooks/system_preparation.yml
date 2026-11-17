@@ -1,0 +1,12 @@
+---
+- name: System Preparation
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [system]
+  
+  roles:
+    - role: common
+      tags: [common]
+    - role: system
+      tags: [system]

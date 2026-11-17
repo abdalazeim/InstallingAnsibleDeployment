@@ -1,0 +1,44 @@
+---
+# Handlers for all roles
+- name: restart docker
+  service:
+    name: docker
+    state: restarted
+
+- name: restart sshd
+  service:
+    name: ssh
+    state: restarted
+
+- name: restart ntp
+  service:
+    name: ntp
+    state: restarted
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: restart odoo
+  service:
+    name: "odoo-{{ odoo_version | default('17') }}"
+    state: restarted
+
+- name: restart postgresql
+  service:
+    name: postgresql
+    state: restarted
+
+- name: restart traefik
+  service:
+    name: traefik
+    state: restarted
+
+- name: restart gunicorn
+  service:
+    name: "gunicorn-{{ django_project_name | default('myproject') }}"
+    state: restarted
+
+- name: reboot if required
+  reboot:
+    msg: "System reboot required"
+    timeout: 300

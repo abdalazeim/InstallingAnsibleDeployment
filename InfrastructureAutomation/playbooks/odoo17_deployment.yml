@@ -1,0 +1,13 @@
+---
+- name: Odoo 17 Deployment
+  hosts: odoo_servers
+  become: true
+  gather_facts: true
+  tags: [odoo, odoo17]
+  
+  vars:
+    odoo_version: "17.0"
+  
+  roles:
+    - role: odoo
+      tags: [odoo]

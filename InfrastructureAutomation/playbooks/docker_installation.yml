@@ -1,0 +1,10 @@
+---
+- name: Docker Installation and Configuration
+  hosts: docker_servers
+  become: true
+  gather_facts: true
+  tags: [docker]
+  
+  roles:
+    - role: docker
+      tags: [docker]

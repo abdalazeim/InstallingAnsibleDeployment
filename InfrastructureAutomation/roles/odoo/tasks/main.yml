@@ -1,0 +1,120 @@
+---
+# Odoo role: Odoo 17/19 management, backups, addons, deployment
+- name: Create Odoo system user
+  user:
+    name: "{{ odoo_user | default('odoo') }}"
+    state: present
+    home: "{{ odoo_home | default('/opt/odoo') }}"
+    create_home: true
+    shell: /bin/bash
+    system: true
+
+- name: Create Odoo data directory
+  file:
+    path: "{{ odoo_data_dir | default('/var/lib/odoo') }}"
+    state: directory
+    owner: "{{ odoo_user | default('odoo') }}"
+    group: "{{ odoo_user | default('odoo') }}"
+    mode: '0755'
+
+- name: Create Odoo config directory
+  file:
+    path: "{{ odoo_config_dir | default('/etc/odoo') }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Odoo configuration
+  template:
+    src: odoo.conf.j2
+    dest: "{{ odoo_config_dir }}/odoo.conf"
+    owner: root
+    group: root
+    mode: '0640'
+  notify: restart odoo
+
+- name: Deploy Odoo systemd service
+  template:
+    src: odoo.service.j2
+    dest: "/etc/systemd/system/odoo-{{ odoo_version }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload systemd
+
+- name: Ensure required collections
+  ansible.builtin.debug:
+    msg: "Ensure community.general and community.postgresql are installed"
+
+- name: Check if Odoo is installed
+  stat:
+    path: "{{ odoo_install_dir | default('/opt/odoo/' + odoo_version) }}/odoo-bin"
+  register: odoo_binary
+
+- name: Install Odoo from source
+  git:
+    repo: "https://github.com/odoo/odoo.git"
+    dest: "{{ odoo_install_dir | default('/opt/odoo/' + odoo_version) }}"
+    version: "{{ odoo_version }}"
+    force: false
+  when: not odoo_binary.stat.exists
+  become_user: "{{ odoo_user | default('odoo') }}"
+
+- name: Install Odoo Python dependencies
+  pip:
+    requirements: "{{ odoo_install_dir | default('/opt/odoo/' + odoo_version) }}/requirements.txt"
+    virtualenv: "{{ odoo_venv_dir | default('/opt/odoo/' + odoo_version + '/venv') }}"
+    state: present
+  when: not odoo_binary.stat.exists
+  become_user: "{{ odoo_user | default('odoo') }}"
+
+- name: Update Odoo addons
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ odoo_addons_dir | default('/opt/odoo/' + odoo_version + '/addons/' + item.name) }}"
+    version: "{{ item.version | default('main') }}"
+    force: "{{ item.force | default(false) }}"
+  loop: "{{ odoo_addons | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: restart odoo
+
+- name: Set up Odoo backup script
+  template:
+    src: odoo-backup.sh.j2
+    dest: /usr/local/bin/odoo-backup.sh
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Set up Odoo backup cron
+  cron:
+    name: "Odoo backup"
+    minute: "0"
+    hour: "{{ odoo_backup_hour | default(2) }}"
+    job: "/usr/local/bin/odoo-backup.sh >> /var/log/odoo-backup.log 2>&1"
+    user: root
+  when: odoo_backup_enabled | default(true)
+
+- name: Ensure Odoo service is running
+  service:
+    name: "odoo-{{ odoo_version }}"
+    state: started
+    enabled: true
+  when: odoo_start_service | default(true)
+
+- name: Wait for Odoo to start
+  wait_for:
+    port: "{{ odoo_port | default(8069) }}"
+    host: 127.0.0.1
+    timeout: 60
+  when: odoo_start_service | default(true)
+
+- name: Check Odoo service status
+  service_facts:
+  register: odoo_service_facts
+
+- name: Display Odoo status
+  debug:
+    msg: "Odoo {{ odoo_version }} service is {{ odoo_service_facts.ansible_facts.services['odoo-' + odoo_version].state | default('unknown') }}"
