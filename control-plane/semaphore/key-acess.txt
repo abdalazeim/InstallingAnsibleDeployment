@@ -1,8 +1,3 @@
-sudo cat /opt/semaphore/.env
-SEMAPHORE_ADMIN_PASSWORD=c6ec1227a1d1c51845ba8822f3604025cb6308852fb7a372
-SEMAPHORE_ACCESS_KEY_ENCRYPTION=xChjrZtsMmV7RD0UQBAHPhhlxs4kIlu+pb9+z6BLFgU=
-
-
-
-sudo grep SEMAPHORE_ADMIN_PASSWORD /opt/semaphore/.env
-SEMAPHORE_ADMIN_PASSWORD=c6ec1227a1d1c51845ba8822f3604025cb6308852fb7a372
+# Credential values removed from the working tree.
+# Supply SEMAPHORE_ADMIN_PASSWORD and SEMAPHORE_ACCESS_KEY_ENCRYPTION outside Git.
+# Rotate any values previously committed; this change does not erase Git history.

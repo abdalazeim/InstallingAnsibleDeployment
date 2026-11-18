@@ -1,0 +1,18 @@
+---
+- name: Backup - Django Database
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: backup.django
+    operation_risk: change
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Backup - Django Database
+    ansible.builtin.include_role:
+      name: backup
+      tasks_from: django

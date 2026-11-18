@@ -1,0 +1,28 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - postgres_instance is defined
+    - database_name is defined
+    - database_username is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - postgres_instance in postgres_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select PostgreSQL instance
+  ansible.builtin.set_fact:
+    pg: '{{ postgres_instances[postgres_instance] }}'
+  no_log: true
+- name: Manage database privilege
+  infrastructure_postgres:
+    action: privileges
+    connection: '{{ pg }}'
+    database: '{{ database_name }}'
+    username: '{{ database_username }}'
+    privilege: '{{ database_privilege | default(''CONNECT'') }}'
+    revoke: '{{ revoke_privilege | default(false) | bool }}'
+  no_log: true

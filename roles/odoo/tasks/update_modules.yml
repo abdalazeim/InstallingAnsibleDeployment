@@ -1,0 +1,71 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    - odoo_modules is defined
+    - confirm_downtime is defined
+    - deployment_backup_verified is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode == 'docker'
+    - confirm_downtime | default(false) | bool
+    - odoo_modules is sequence
+    - odoo_modules is not string
+    - odoo_modules | length > 0
+    - '''all'' not in odoo_modules'
+    - deployment_backup_verified | default(false) | bool
+    - odoo_modules | select('match', '^[A-Za-z_][A-Za-z0-9_]*$') | list | length == odoo_modules | length
+    - odoo.compose_directory is defined
+    - odoo.compose_service is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Upgrade only selected modules in a one-off Compose container
+  block:
+  - name: Stop normal Odoo process
+    ansible.builtin.include_tasks:
+      file: stop.yml
+  - name: Upgrade explicitly selected modules
+    ansible.builtin.command:
+      argv:
+      - docker
+      - compose
+      - --project-directory
+      - '{{ odoo.compose_directory }}'
+      - run
+      - --rm
+      - --no-deps
+      - '{{ odoo.compose_service }}'
+      - odoo
+      - --stop-after-init
+      - --no-http
+      - -d
+      - '{{ odoo.database }}'
+      - -u
+      - '{{ odoo_modules | join(",") }}'
+    changed_when: true
+    no_log: true
+  always:
+  - name: Start Odoo after upgrade attempt
+    ansible.builtin.include_tasks:
+      file: start.yml

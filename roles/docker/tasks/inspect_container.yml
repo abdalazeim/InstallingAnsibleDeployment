@@ -1,0 +1,31 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - container_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - container_name is match('^[a-zA-Z0-9][a-zA-Z0-9_.-]*$')
+    - log_lines | default(100) | int > 0
+    - log_lines | default(100) | int <= 1000
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Read selected container
+  ansible.builtin.command:
+    argv:
+    - docker
+    - inspect
+    - --format
+    - '{% raw %}{{json .State}}{% endraw %}'
+    - '{{ container_name }}'
+  changed_when: false
+  no_log: false
+  register: docker_result
+  check_mode: false
+- name: Display selected container
+  ansible.builtin.debug:
+    var: docker_result.stdout_lines
+  when: true

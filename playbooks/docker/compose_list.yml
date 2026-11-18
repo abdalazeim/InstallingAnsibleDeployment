@@ -1,0 +1,18 @@
+---
+- name: Docker - List Compose Projects
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: docker.compose_list
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Docker - List Compose Projects
+    ansible.builtin.include_role:
+      name: docker
+      tasks_from: compose_list

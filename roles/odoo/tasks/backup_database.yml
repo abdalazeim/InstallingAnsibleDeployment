@@ -1,0 +1,36 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Back up Odoo database
+  infrastructure_postgres:
+    action: backup
+    connection: '{{ postgres_instances[odoo.postgres_instance] }}'
+    database: '{{ odoo.database }}'
+    backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/database'
+    format: custom
+  register: odoo_database_backup
+  no_log: true
+- name: Explain partial backup scope
+  ansible.builtin.debug:
+    msg: This is a partial backup. Use Full Backup for a paired database and filestore recovery point.

@@ -1,0 +1,37 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - traefik_directory is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate Compose structure
+  ansible.builtin.command:
+    argv:
+    - docker
+    - compose
+    - --project-directory
+    - '{{ traefik_directory }}'
+    - config
+    - --quiet
+  changed_when: false
+  check_mode: false
+- name: Read static configuration
+  ansible.builtin.slurp:
+    src: '{{ traefik_directory }}/traefik.yml'
+  register: traefik_raw
+  no_log: true
+- name: Parse static YAML
+  ansible.builtin.set_fact:
+    traefik_config: '{{ traefik_raw.content | b64decode | from_yaml }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - traefik_config.entryPoints is mapping
+    - traefik_config.providers is mapping
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Clarify validation scope
+  ansible.builtin.debug:
+    msg: Compose and YAML validated; deploy and check Traefik logs/health to validate version-specific routing semantics.

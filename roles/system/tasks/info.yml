@@ -1,0 +1,17 @@
+---
+- name: Collect service facts
+  ansible.builtin.service_facts: {}
+- name: Display system information
+  ansible.builtin.debug:
+    msg:
+      os: '{{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}'
+      kernel: '{{ ansible_facts.kernel }}'
+      hostname: '{{ ansible_facts.hostname }}'
+      cpu: '{{ ansible_facts.processor }}'
+      vcpus: '{{ ansible_facts.processor_vcpus }}'
+      memory: '{{ ansible_facts.memory_mb }}'
+      mounts: '{{ ansible_facts.mounts }}'
+      interfaces: '{{ ansible_facts.interfaces }}'
+      ipv4: '{{ ansible_facts.all_ipv4_addresses }}'
+      uptime_seconds: '{{ ansible_facts.uptime_seconds }}'
+      services: '{{ ansible_facts.services }}'

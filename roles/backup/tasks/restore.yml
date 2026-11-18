@@ -1,0 +1,21 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - backup_id is defined
+    - restore_destination is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Execute verified file backup operation
+  infrastructure_archive:
+    action: restore
+    backup_root: '{{ backup_root }}/files'
+    source: '{{ backup_source | default('''') }}'
+    backup_id: '{{ backup_id | default('''') }}'
+    destination: '{{ restore_destination | default('''') }}'
+    retention_days: '{{ retention_days }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+  register: backup_result
+- name: Display backup operation result
+  ansible.builtin.debug:
+    var: backup_result

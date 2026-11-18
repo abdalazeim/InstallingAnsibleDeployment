@@ -1,0 +1,4 @@
+---
+- name: Display configured applications
+  ansible.builtin.debug:
+    msg: '{{ django_applications.keys() | list }}'

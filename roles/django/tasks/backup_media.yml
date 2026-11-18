@@ -1,0 +1,32 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application in django_applications
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select Django application
+  ansible.builtin.set_fact:
+    app: '{{ django_applications[django_application] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') in ['native','compose']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Back up media files
+  infrastructure_archive:
+    action: backup
+    source: '{{ app.media_directory }}'
+    backup_root: '{{ backup_root }}/django/{{ django_application }}/media'
+  register: media_backup
+- name: Display media recovery identifier
+  ansible.builtin.debug:
+    msg: '{{ media_backup.backup | default({}) }}'

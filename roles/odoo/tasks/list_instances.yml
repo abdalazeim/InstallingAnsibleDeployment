@@ -1,0 +1,4 @@
+---
+- name: Display configured instance identifiers
+  ansible.builtin.debug:
+    msg: '{{ odoo_instances.keys() | list }}'

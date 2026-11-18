@@ -1,0 +1,16 @@
+---
+- name: Read Docker state
+  ansible.builtin.command:
+    argv:
+    - docker
+    - image
+    - ls
+    - --format
+    - json
+  changed_when: false
+  no_log: false
+  register: docker_result
+  check_mode: false
+- name: Display Docker state
+  ansible.builtin.debug:
+    var: docker_result.stdout_lines

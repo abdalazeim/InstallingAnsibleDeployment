@@ -1,0 +1,46 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    - restore_database is defined
+    - database_backup_id is defined
+    - media_backup_id is defined
+    - restore_destination is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application in django_applications
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select Django application
+  ansible.builtin.set_fact:
+    app: '{{ django_applications[django_application] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') in ['native','compose']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Restore database to a new name
+  infrastructure_postgres:
+    action: restore
+    connection: '{{ postgres_instances[app.postgres_instance] }}'
+    database: '{{ restore_database }}'
+    backup_root: '{{ backup_root }}/django/{{ django_application }}/database'
+    backup_id: '{{ database_backup_id }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+  no_log: true
+- name: Restore media to an isolated destination
+  infrastructure_archive:
+    action: restore
+    backup_root: '{{ backup_root }}/django/{{ django_application }}/media'
+    backup_id: '{{ media_backup_id }}'
+    destination: '{{ restore_destination }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+- name: Explain recovery validation
+  ansible.builtin.debug:
+    msg: Configure and validate a recovery application against these new targets before switching traffic.

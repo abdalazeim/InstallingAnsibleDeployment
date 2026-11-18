@@ -1,0 +1,18 @@
+---
+- name: Odoo - Health Check
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: odoo.health_check
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Odoo - Health Check
+    ansible.builtin.include_role:
+      name: odoo
+      tasks_from: health_check

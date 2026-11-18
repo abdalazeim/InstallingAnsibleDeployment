@@ -1,0 +1,34 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_url is defined
+    - jenkins_job_path is defined
+    - jenkins_build_number is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_job_path is match('^job/[A-Za-z0-9_./-]+$')
+    - '''..'' not in jenkins_job_path'
+    - jenkins_build_number | int > 0
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Read build summary
+  ansible.builtin.uri:
+    url: '{{ jenkins_url }}/{{ jenkins_job_path }}/{{ jenkins_build_number }}/api/json'
+    url_username: '{{ jenkins_user }}'
+    url_password: '{{ jenkins_api_token }}'
+    force_basic_auth: true
+    status_code: 200
+    return_content: true
+  register: jenkins_build
+  no_log: true
+  check_mode: false
+- name: Display build summary
+  ansible.builtin.debug:
+    msg:
+      result: '{{ jenkins_build.json.result }}'
+      building: '{{ jenkins_build.json.building }}'
+      duration_ms: '{{ jenkins_build.json.duration }}'

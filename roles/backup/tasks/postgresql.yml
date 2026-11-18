@@ -1,0 +1,12 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - postgres_instance is defined
+    - database_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Run application backup workflow
+  ansible.builtin.include_role:
+    name: postgresql
+    tasks_from: backup

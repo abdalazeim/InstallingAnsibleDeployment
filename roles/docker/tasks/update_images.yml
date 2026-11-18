@@ -1,0 +1,19 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - image_reference is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - image_reference | length > 0
+    - not image_reference.startswith('-')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Pull requested image
+  community.docker.docker_image:
+    name: '{{ image_reference }}'
+    source: pull
+    force_source: true

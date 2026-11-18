@@ -1,0 +1,21 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - package_names is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - package_names is sequence
+    - package_names is not string
+    - package_names | length > 0
+    - package_state | default('present') in ['present','latest','absent']
+    - package_state | default('present') != 'absent' or confirm_destructive_operation | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Manage requested packages
+  ansible.builtin.apt:
+    name: '{{ package_names }}'
+    state: '{{ package_state | default(''present'') }}'

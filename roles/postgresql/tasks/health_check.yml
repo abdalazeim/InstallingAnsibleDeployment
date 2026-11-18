@@ -1,0 +1,34 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - postgres_instance is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - postgres_instance in postgres_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select PostgreSQL instance
+  ansible.builtin.set_fact:
+    pg: '{{ postgres_instances[postgres_instance] }}'
+  no_log: true
+- name: Execute PostgreSQL operation
+  infrastructure_postgres:
+    action: health
+    connection: '{{ pg }}'
+    database: '{{ database_name | default('''') }}'
+    backup_id: '{{ backup_id | default('''') }}'
+    backup_root: '{{ pg.backup_root | default(backup_root + ''/postgresql/'' + postgres_instance) }}'
+    format: '{{ backup_format | default(''custom'') }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+  register: pg_result
+  no_log: true
+- name: Display PostgreSQL result
+  ansible.builtin.debug:
+    msg:
+      data: '{{ pg_result.data | default({}) }}'
+      backup: '{{ pg_result.backup | default({}) }}'
+      changed: '{{ pg_result.changed }}'

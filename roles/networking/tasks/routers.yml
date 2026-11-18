@@ -1,0 +1,28 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - traefik_api_url is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - traefik_api_url is match('^https?://')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Query configured Traefik endpoint
+  ansible.builtin.uri:
+    url: '{{ traefik_api_url }}/api/http/routers'
+    status_code: 200
+    return_content: true
+    validate_certs: true
+  register: traefik_result
+  check_mode: false
+  no_log: true
+- name: Report endpoint status
+  ansible.builtin.debug:
+    msg:
+      status: '{{ traefik_result.status }}'
+      routers: '{{ traefik_result.json | default([]) | map(attribute=''name'') | list if operation_id == ''networking.routers''
+        else [] }}'

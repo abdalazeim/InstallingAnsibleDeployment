@@ -1,0 +1,5 @@
+---
+- name: Run selected monitoring operation
+  ansible.builtin.include_role:
+    name: docker
+    tasks_from: health_check

@@ -1,0 +1,1599 @@
+{
+  "schema_version": 1,
+  "operations": [
+    {
+      "id": "system.info",
+      "name": "System - Information",
+      "group": "system",
+      "playbook": "playbooks/system/info.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "system.verify",
+      "name": "System - Verify",
+      "group": "system",
+      "playbook": "playbooks/system/verify.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "system.health_check",
+      "name": "System - Health Check",
+      "group": "system",
+      "playbook": "playbooks/system/health_check.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "system.monitoring",
+      "name": "System - Resource Monitoring",
+      "group": "system",
+      "playbook": "playbooks/system/monitoring.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "system.update",
+      "name": "System - Update Packages",
+      "group": "system",
+      "playbook": "playbooks/system/update.yml",
+      "risk": "change",
+      "inputs": {
+        "upgrade_type": {
+          "required": false,
+          "description": "",
+          "choices": [
+            "safe",
+            "dist",
+            "no"
+          ]
+        },
+        "confirm_reboot": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.packages",
+      "name": "System - Manage Packages",
+      "group": "system",
+      "playbook": "playbooks/system/packages.yml",
+      "risk": "change",
+      "inputs": {
+        "package_names": {
+          "required": true,
+          "description": ""
+        },
+        "package_state": {
+          "required": false,
+          "description": "",
+          "choices": [
+            "present",
+            "latest",
+            "absent"
+          ]
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.users_list",
+      "name": "System - User List",
+      "group": "system",
+      "playbook": "playbooks/system/users_list.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "system.users_manage",
+      "name": "System - User Management",
+      "group": "system",
+      "playbook": "playbooks/system/users_manage.yml",
+      "risk": "change",
+      "inputs": {
+        "managed_username": {
+          "required": true,
+          "description": ""
+        },
+        "managed_user_state": {
+          "required": false,
+          "description": "",
+          "choices": [
+            "present",
+            "absent"
+          ]
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.ssh_status",
+      "name": "System - SSH Status",
+      "group": "system",
+      "playbook": "playbooks/system/ssh_status.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.ssh_configure",
+      "name": "System - SSH Configuration",
+      "group": "system",
+      "playbook": "playbooks/system/ssh_configure.yml",
+      "risk": "change",
+      "inputs": {
+        "ssh_access_verified": {
+          "required": true,
+          "description": ""
+        },
+        "ssh_port": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.firewall_status",
+      "name": "System - Firewall Status",
+      "group": "system",
+      "playbook": "playbooks/system/firewall_status.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "system.firewall_manage",
+      "name": "System - Firewall Management",
+      "group": "system",
+      "playbook": "playbooks/system/firewall_manage.yml",
+      "risk": "destructive",
+      "inputs": {
+        "firewall_state": {
+          "required": false,
+          "description": "",
+          "choices": [
+            "enabled",
+            "disabled"
+          ]
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.install",
+      "name": "Docker - Install",
+      "group": "docker",
+      "playbook": "playbooks/docker/install.yml",
+      "risk": "change",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.health_check",
+      "name": "Docker - Health Check",
+      "group": "docker",
+      "playbook": "playbooks/docker/health_check.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.list_containers",
+      "name": "Docker - List Containers",
+      "group": "docker",
+      "playbook": "playbooks/docker/list_containers.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.list_images",
+      "name": "Docker - List Images",
+      "group": "docker",
+      "playbook": "playbooks/docker/list_images.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.resource_usage",
+      "name": "Docker - Resource Usage",
+      "group": "docker",
+      "playbook": "playbooks/docker/resource_usage.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.compose_list",
+      "name": "Docker - List Compose Projects",
+      "group": "docker",
+      "playbook": "playbooks/docker/compose_list.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.start_container",
+      "name": "Docker - Start Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/start_container.yml",
+      "risk": "change",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.stop_container",
+      "name": "Docker - Stop Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/stop_container.yml",
+      "risk": "change",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.restart_container",
+      "name": "Docker - Restart Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/restart_container.yml",
+      "risk": "change",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.pause_container",
+      "name": "Docker - Pause Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/pause_container.yml",
+      "risk": "change",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.unpause_container",
+      "name": "Docker - Unpause Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/unpause_container.yml",
+      "risk": "change",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.delete_container",
+      "name": "Docker - Delete Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/delete_container.yml",
+      "risk": "destructive",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.container_logs",
+      "name": "Docker - Container Logs",
+      "group": "docker",
+      "playbook": "playbooks/docker/container_logs.yml",
+      "risk": "read",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        },
+        "allow_sensitive_logs": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.inspect_container",
+      "name": "Docker - Inspect Container",
+      "group": "docker",
+      "playbook": "playbooks/docker/inspect_container.yml",
+      "risk": "read",
+      "inputs": {
+        "container_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.update_images",
+      "name": "Docker - Pull Image",
+      "group": "docker",
+      "playbook": "playbooks/docker/update_images.yml",
+      "risk": "change",
+      "inputs": {
+        "image_reference": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.network_manage",
+      "name": "Docker - Network Management",
+      "group": "docker",
+      "playbook": "playbooks/docker/network_manage.yml",
+      "risk": "change",
+      "inputs": {
+        "network_name": {
+          "required": true,
+          "description": ""
+        },
+        "network_state": {
+          "required": false,
+          "description": "",
+          "choices": [
+            "present",
+            "absent"
+          ]
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.compose_up",
+      "name": "Docker - Compose Up",
+      "group": "docker",
+      "playbook": "playbooks/docker/compose_up.yml",
+      "risk": "change",
+      "inputs": {
+        "compose_directory": {
+          "required": true,
+          "description": ""
+        },
+        "compose_project": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.compose_down",
+      "name": "Docker - Compose Down",
+      "group": "docker",
+      "playbook": "playbooks/docker/compose_down.yml",
+      "risk": "destructive",
+      "inputs": {
+        "compose_directory": {
+          "required": true,
+          "description": ""
+        },
+        "compose_project": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.compose_restart",
+      "name": "Docker - Compose Restart",
+      "group": "docker",
+      "playbook": "playbooks/docker/compose_restart.yml",
+      "risk": "change",
+      "inputs": {
+        "compose_directory": {
+          "required": true,
+          "description": ""
+        },
+        "compose_project": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "docker.compose_update",
+      "name": "Docker - Compose Update",
+      "group": "docker",
+      "playbook": "playbooks/docker/compose_update.yml",
+      "risk": "change",
+      "inputs": {
+        "compose_directory": {
+          "required": true,
+          "description": ""
+        },
+        "compose_project": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.health_check",
+      "name": "PostgreSQL - Status",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/health_check.yml",
+      "risk": "read",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.list_databases",
+      "name": "PostgreSQL - List Databases",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/list_databases.yml",
+      "risk": "read",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.database_info",
+      "name": "PostgreSQL - Database Information",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/database_info.yml",
+      "risk": "read",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.connections",
+      "name": "PostgreSQL - Connections",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/connections.yml",
+      "risk": "read",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.create_database",
+      "name": "PostgreSQL - Create Database",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/create_database.yml",
+      "risk": "change",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.delete_database",
+      "name": "PostgreSQL - Delete Database",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/delete_database.yml",
+      "risk": "destructive",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.backup",
+      "name": "PostgreSQL - Backup Database",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/backup.yml",
+      "risk": "change",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.restore",
+      "name": "PostgreSQL - Restore Database",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/restore.yml",
+      "risk": "destructive",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        },
+        "backup_id": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.verify_backup",
+      "name": "PostgreSQL - Verify Backup",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/verify_backup.yml",
+      "risk": "read",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "backup_id": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.users_manage",
+      "name": "PostgreSQL - User Management",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/users_manage.yml",
+      "risk": "change",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_username": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "postgresql.privileges",
+      "name": "PostgreSQL - Database Privileges",
+      "group": "postgresql",
+      "playbook": "playbooks/postgresql/privileges.yml",
+      "risk": "change",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        },
+        "database_username": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.list_instances",
+      "name": "Odoo - List Instances",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/list_instances.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "odoo.start",
+      "name": "Odoo - Start Instance",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/start.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.stop",
+      "name": "Odoo - Stop Instance",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/stop.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.restart",
+      "name": "Odoo - Restart Instance",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/restart.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.health_check",
+      "name": "Odoo - Health Check",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/health_check.yml",
+      "risk": "read",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.logs",
+      "name": "Odoo - Logs",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/logs.yml",
+      "risk": "read",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "allow_sensitive_logs": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.backup_database",
+      "name": "Odoo - Database Backup",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/backup_database.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.backup_filestore",
+      "name": "Odoo - Filestore Backup",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/backup_filestore.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.backup_full",
+      "name": "Odoo - Full Backup",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/backup_full.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "confirm_downtime": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.restore",
+      "name": "Odoo - Restore Backup",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/restore.yml",
+      "risk": "destructive",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "bundle_id": {
+          "required": true,
+          "description": ""
+        },
+        "restore_database": {
+          "required": true,
+          "description": ""
+        },
+        "restore_destination": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.addons_validate",
+      "name": "Odoo - Addons Validation",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/addons_validate.yml",
+      "risk": "read",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.addons_deploy",
+      "name": "Odoo - Deploy Addons",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/addons_deploy.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "addons_repository": {
+          "required": true,
+          "description": ""
+        },
+        "addons_revision": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "odoo.update_modules",
+      "name": "Odoo - Update Selected Modules",
+      "group": "odoo",
+      "playbook": "playbooks/odoo/update_modules.yml",
+      "risk": "destructive",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "odoo_modules": {
+          "required": true,
+          "description": ""
+        },
+        "confirm_downtime": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "networking.port_check",
+      "name": "Networking - Port Check",
+      "group": "networking",
+      "playbook": "playbooks/networking/port_check.yml",
+      "risk": "read",
+      "inputs": {
+        "network_host": {
+          "required": true,
+          "description": ""
+        },
+        "network_port": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.connectivity",
+      "name": "Networking - Connectivity Check",
+      "group": "networking",
+      "playbook": "playbooks/networking/connectivity.yml",
+      "risk": "read",
+      "inputs": {
+        "network_host": {
+          "required": true,
+          "description": ""
+        },
+        "network_port": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.dns_check",
+      "name": "Networking - DNS Check",
+      "group": "networking",
+      "playbook": "playbooks/networking/dns_check.yml",
+      "risk": "read",
+      "inputs": {
+        "dns_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.ssl_check",
+      "name": "Traefik - SSL Certificate Check",
+      "group": "networking",
+      "playbook": "playbooks/networking/ssl_check.yml",
+      "risk": "read",
+      "inputs": {
+        "tls_hostname": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.traefik_status",
+      "name": "Traefik - Status",
+      "group": "networking",
+      "playbook": "playbooks/networking/traefik_status.yml",
+      "risk": "read",
+      "inputs": {
+        "traefik_api_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.traefik_health",
+      "name": "Traefik - Health Check",
+      "group": "networking",
+      "playbook": "playbooks/networking/traefik_health.yml",
+      "risk": "read",
+      "inputs": {
+        "traefik_api_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.routers",
+      "name": "Traefik - Router Inspection",
+      "group": "networking",
+      "playbook": "playbooks/networking/routers.yml",
+      "risk": "read",
+      "inputs": {
+        "traefik_api_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "networking.docker_networks",
+      "name": "Docker - Network Inspection",
+      "group": "networking",
+      "playbook": "playbooks/networking/docker_networks.yml",
+      "risk": "read",
+      "inputs": {
+        "network_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "networking.traefik_validate",
+      "name": "Traefik - Configuration Validation",
+      "group": "networking",
+      "playbook": "playbooks/networking/traefik_validate.yml",
+      "risk": "read",
+      "inputs": {
+        "traefik_directory": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.list_applications",
+      "name": "Django - List Applications",
+      "group": "django",
+      "playbook": "playbooks/django/list_applications.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "django.status",
+      "name": "Django - Application Status",
+      "group": "django",
+      "playbook": "playbooks/django/status.yml",
+      "risk": "read",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "django.health_check",
+      "name": "Django - Health Check",
+      "group": "django",
+      "playbook": "playbooks/django/health_check.yml",
+      "risk": "read",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "django.restart_gunicorn",
+      "name": "Django - Restart Gunicorn",
+      "group": "django",
+      "playbook": "playbooks/django/restart_gunicorn.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.migrate",
+      "name": "Django - Run Migrations",
+      "group": "django",
+      "playbook": "playbooks/django/migrate.yml",
+      "risk": "destructive",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.collectstatic",
+      "name": "Django - Collect Static",
+      "group": "django",
+      "playbook": "playbooks/django/collectstatic.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_backup_verified": {
+          "required": false,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.deploy",
+      "name": "Django - Deploy Application",
+      "group": "django",
+      "playbook": "playbooks/django/deploy.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_version": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.update",
+      "name": "Django - Update Application",
+      "group": "django",
+      "playbook": "playbooks/django/update.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        },
+        "deployment_version": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.backup_database",
+      "name": "Django - Backup Database",
+      "group": "django",
+      "playbook": "playbooks/django/backup_database.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.backup_media",
+      "name": "Django - Backup Media",
+      "group": "django",
+      "playbook": "playbooks/django/backup_media.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "django.restore",
+      "name": "Django - Restore Backup",
+      "group": "django",
+      "playbook": "playbooks/django/restore.yml",
+      "risk": "destructive",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        },
+        "restore_database": {
+          "required": true,
+          "description": ""
+        },
+        "database_backup_id": {
+          "required": true,
+          "description": ""
+        },
+        "media_backup_id": {
+          "required": true,
+          "description": ""
+        },
+        "restore_destination": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "networking.traefik_deploy",
+      "name": "Traefik - Deploy",
+      "group": "networking",
+      "playbook": "playbooks/networking/traefik_deploy.yml",
+      "risk": "change",
+      "inputs": {
+        "traefik_directory": {
+          "required": true,
+          "description": ""
+        },
+        "traefik_version": {
+          "required": true,
+          "description": ""
+        },
+        "traefik_acme_email": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "jenkins.status",
+      "name": "Jenkins - Status",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/status.yml",
+      "risk": "read",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.health_check",
+      "name": "Jenkins - Health Check",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/health_check.yml",
+      "risk": "read",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.list_jobs",
+      "name": "Jenkins - List Jobs",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/list_jobs.yml",
+      "risk": "read",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.integration_test",
+      "name": "Jenkins - Integration Test",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/integration_test.yml",
+      "risk": "read",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.build_status",
+      "name": "Jenkins - Build Status",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/build_status.yml",
+      "risk": "read",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        },
+        "jenkins_job_path": {
+          "required": true,
+          "description": ""
+        },
+        "jenkins_build_number": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.trigger_job",
+      "name": "Jenkins - Trigger Job",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/trigger_job.yml",
+      "risk": "change",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        },
+        "jenkins_job_path": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "jenkins.deploy",
+      "name": "Jenkins - Deployment",
+      "group": "jenkins",
+      "playbook": "playbooks/jenkins/deploy.yml",
+      "risk": "change",
+      "inputs": {
+        "jenkins_url": {
+          "required": true,
+          "description": ""
+        },
+        "jenkins_job_path": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "backup.full_backup",
+      "name": "Backup - Files Backup",
+      "group": "backup",
+      "playbook": "playbooks/backup/full_backup.yml",
+      "risk": "change",
+      "inputs": {
+        "backup_source": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.list",
+      "name": "Backup - List Backups",
+      "group": "backup",
+      "playbook": "playbooks/backup/list.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.verify",
+      "name": "Backup - Verify",
+      "group": "backup",
+      "playbook": "playbooks/backup/verify.yml",
+      "risk": "read",
+      "inputs": {
+        "backup_id": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.restore",
+      "name": "Backup - Restore",
+      "group": "backup",
+      "playbook": "playbooks/backup/restore.yml",
+      "risk": "destructive",
+      "inputs": {
+        "backup_id": {
+          "required": true,
+          "description": ""
+        },
+        "restore_destination": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.retention",
+      "name": "Backup - Retention Cleanup",
+      "group": "backup",
+      "playbook": "playbooks/backup/retention.yml",
+      "risk": "destructive",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.postgresql",
+      "name": "Backup - PostgreSQL",
+      "group": "backup",
+      "playbook": "playbooks/backup/postgresql.yml",
+      "risk": "change",
+      "inputs": {
+        "postgres_instance": {
+          "required": true,
+          "description": ""
+        },
+        "database_name": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.odoo",
+      "name": "Backup - Odoo",
+      "group": "backup",
+      "playbook": "playbooks/backup/odoo.yml",
+      "risk": "change",
+      "inputs": {
+        "odoo_instance": {
+          "required": true,
+          "description": ""
+        },
+        "confirm_downtime": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "backup.django",
+      "name": "Backup - Django Database",
+      "group": "backup",
+      "playbook": "playbooks/backup/django.yml",
+      "risk": "change",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "monitoring.server_health",
+      "name": "Monitoring - Server Health",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/server_health.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "monitoring.resources",
+      "name": "Monitoring - CPU and RAM",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/resources.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "monitoring.disk",
+      "name": "Monitoring - Disk Usage",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/disk.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "monitoring.docker",
+      "name": "Monitoring - Docker Health",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/docker.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": true
+    },
+    {
+      "id": "monitoring.applications",
+      "name": "Monitoring - Application Health",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/applications.yml",
+      "risk": "read",
+      "inputs": {
+        "django_application": {
+          "required": true,
+          "description": ""
+        }
+      },
+      "status": "implemented",
+      "become": false
+    },
+    {
+      "id": "monitoring.overview",
+      "name": "Monitoring - Infrastructure Overview",
+      "group": "monitoring",
+      "playbook": "playbooks/monitoring/overview.yml",
+      "risk": "read",
+      "inputs": {},
+      "status": "implemented",
+      "become": false
+    }
+  ]
+}

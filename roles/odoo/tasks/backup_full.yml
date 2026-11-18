@@ -1,0 +1,88 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    - confirm_downtime is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - confirm_downtime | default(false) | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Inspect Docker state before quiescing
+  community.docker.docker_container_info:
+    name: '{{ odoo.container }}'
+  when: odoo.mode == 'docker'
+  register: odoo_before
+  no_log: true
+- name: Read native service state
+  ansible.builtin.service_facts: {}
+  when: odoo.mode == 'native'
+- name: Remember running state
+  ansible.builtin.set_fact:
+    odoo_was_running: '{{ odoo_before.container.State.Running if odoo.mode == ''docker'' else ansible_facts.services[odoo.service].state
+      == ''running'' }}'
+  no_log: true
+- name: Create consistent paired backup while application is stopped
+  block:
+  - name: Stop Odoo for consistent files
+    ansible.builtin.include_tasks:
+      file: stop.yml
+  - name: Back up Odoo database
+    infrastructure_postgres:
+      action: backup
+      connection: '{{ postgres_instances[odoo.postgres_instance] }}'
+      database: '{{ odoo.database }}'
+      backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/database'
+      format: custom
+    register: odoo_database_backup
+    no_log: true
+  - name: Back up Odoo filestore
+    infrastructure_archive:
+      action: backup
+      source: '{{ odoo.filestore }}'
+      backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/filestore'
+    register: odoo_filestore_backup
+  - name: Create bundle manifest directory
+    ansible.builtin.file:
+      path: '{{ backup_root }}/odoo/{{ odoo_instance }}/bundles'
+      state: directory
+      mode: '0700'
+  - name: Write paired backup manifest
+    ansible.builtin.copy:
+      dest: '{{ backup_root }}/odoo/{{ odoo_instance }}/bundles/{{ odoo_database_backup.backup.backup_id }}.json'
+      mode: '0600'
+      content: '{{ {''schema_version'': 1, ''kind'': ''odoo-bundle'', ''instance'': odoo_instance, ''database'':
+        odoo_database_backup.backup, ''filestore'': odoo_filestore_backup.backup} | to_nice_json }}'
+    when: not ansible_check_mode
+  - name: Display recovery identifiers
+    ansible.builtin.debug:
+      msg:
+        database: '{{ odoo_database_backup.backup | default({}) }}'
+        filestore: '{{ odoo_filestore_backup.backup | default({}) }}'
+    when: not ansible_check_mode
+  always:
+  - name: Restore original running state
+    ansible.builtin.include_tasks:
+      file: start.yml
+    when: odoo_was_running | bool

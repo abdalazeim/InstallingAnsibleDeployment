@@ -1,0 +1,8 @@
+---
+- name: Verify Python and target facts
+  ansible.builtin.ping: {}
+- name: Display runtime
+  ansible.builtin.debug:
+    msg:
+      python: '{{ ansible_facts.python.version }}'
+      environment: '{{ infrastructure_environment }}'

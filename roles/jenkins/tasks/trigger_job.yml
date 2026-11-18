@@ -1,0 +1,30 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_url is defined
+    - jenkins_job_path is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_job_path is match('^job/[A-Za-z0-9_./-]+$')
+    - '''..'' not in jenkins_job_path'
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Queue approved Jenkins job using API-token authentication
+  ansible.builtin.uri:
+    url: '{{ jenkins_url }}/{{ jenkins_job_path }}/buildWithParameters'
+    method: POST
+    url_username: '{{ jenkins_user }}'
+    url_password: '{{ jenkins_api_token }}'
+    force_basic_auth: true
+    body_format: form-urlencoded
+    body: '{{ jenkins_parameters | default({}) }}'
+    status_code: 201
+  no_log: true
+  when: not ansible_check_mode
+- name: Explain asynchronous job result
+  ansible.builtin.debug:
+    msg: Job queued, not completed. Follow Jenkins build status and archived execution report.

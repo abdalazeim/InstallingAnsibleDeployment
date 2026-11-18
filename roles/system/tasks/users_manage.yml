@@ -1,0 +1,51 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - managed_username is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - managed_username is match('^[a-z_][a-z0-9_-]{0,31}$')
+    - managed_username not in ['root', ansible_user | default('root'), ansible_facts.user_id]
+    - managed_user_state | default('present') in ['present','absent']
+    - managed_user_state | default('present') != 'absent' or confirm_destructive_operation | bool
+    fail_msg: Refusing invalid or current administrator account
+    quiet: true
+- name: Manage supplementary groups
+  ansible.builtin.group:
+    name: '{{ item }}'
+    state: present
+  loop: '{{ managed_groups | default([]) }}'
+- name: Manage account without removing home data
+  ansible.builtin.user:
+    name: '{{ managed_username }}'
+    state: '{{ managed_user_state | default(''present'') }}'
+    groups: '{{ managed_groups | default(omit) }}'
+    append: true
+    password_lock: '{{ managed_user_locked | default(omit) }}'
+    remove: false
+- name: Install public key
+  ansible.posix.authorized_key:
+    user: '{{ managed_username }}'
+    key: '{{ managed_public_key }}'
+    state: present
+  when: managed_public_key is defined and managed_user_state | default('present') == 'present'
+- name: Manage validated sudo policy
+  ansible.builtin.copy:
+    content: '{{ managed_username }} ALL=(ALL:ALL) ALL
+
+      '
+    dest: /etc/sudoers.d/infra-{{ managed_username }}
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  when: managed_sudo | default(false) | bool and managed_user_state | default('present') == 'present'
+- name: Remove obsolete managed sudo policy
+  ansible.builtin.file:
+    path: /etc/sudoers.d/infra-{{ managed_username }}
+    state: absent
+  when: not (managed_sudo | default(false) | bool) or managed_user_state | default('present') == 'absent'

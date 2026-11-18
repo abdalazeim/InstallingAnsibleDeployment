@@ -1,0 +1,11 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    - deployment_version is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Run the release deployment workflow
+  ansible.builtin.include_tasks:
+    file: deploy.yml

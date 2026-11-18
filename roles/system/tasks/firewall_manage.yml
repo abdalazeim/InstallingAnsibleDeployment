@@ -1,0 +1,40 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - firewall_state | default('enabled') in ['enabled','disabled']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Install UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+- name: Preserve current SSH port before policy changes
+  community.general.ufw:
+    rule: allow
+    port: '{{ ansible_port | default(22) }}'
+    proto: tcp
+- name: Preserve configured SSH port
+  community.general.ufw:
+    rule: allow
+    port: '{{ ssh_port | default(ansible_port | default(22)) }}'
+    proto: tcp
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - item.rule in ['allow','deny']
+    - item.proto | default('tcp') in ['tcp','udp']
+    - item.rule != 'deny' or item.port | string not in [(ansible_port | default(22) | string), (ssh_port | default(22)
+      | string)]
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+  loop: '{{ firewall_rules | default([]) }}'
+- name: Manage requested rules
+  community.general.ufw:
+    rule: '{{ item.rule }}'
+    port: '{{ item.port }}'
+    proto: '{{ item.proto | default(''tcp'') }}'
+  loop: '{{ firewall_rules | default([]) }}'
+- name: Apply firewall state
+  community.general.ufw:
+    state: '{{ firewall_state | default(''enabled'') }}'

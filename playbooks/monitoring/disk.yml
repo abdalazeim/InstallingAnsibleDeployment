@@ -1,0 +1,18 @@
+---
+- name: Monitoring - Disk Usage
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: false
+  any_errors_fatal: true
+  vars:
+    operation_id: monitoring.disk
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Monitoring - Disk Usage
+    ansible.builtin.include_role:
+      name: monitoring
+      tasks_from: disk
