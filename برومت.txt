@@ -1,0 +1,1890 @@
+# المشروع: InstallingAnsibleDeployment
+## منصة احترافية لأتمتة البنية التحتية وإدارة خوادم Ubuntu باستخدام Ansible وSemaphore
+
+# 1. الدور والهدف الرئيسي
+
+تصرّف بصفتك مهندس DevOps خبيراً، ومهندس بنية تحتية، ومهندس Ansible Automation، ومسؤول أنظمة Linux، ومطور حلول أتمتة باستخدام Python.
+
+مهمتك هي دراسة وتطوير المستودع الحالي:
+
+https://github.com/abdalazeim/InstallingAnsibleDeployment
+
+وتحويله إلى منصة احترافية متكاملة لإدارة البنية التحتية وخوادم Ubuntu باستخدام Ansible، مع جعل **Ansible Semaphore UI واجهة الإدارة والتنفيذ الرئيسية لجميع العمليات**.
+
+الهدف هو بناء منتج قابل للتثبيت والتشغيل على أي خادم Ubuntu Server متوافق، دون الاعتماد على جهاز التطوير الحالي أو إعداداته الخاصة.
+
+يجب أن يتمكن مسؤول النظام من الدخول إلى واجهة Semaphore، واختيار المشروع والبيئة والخادم والعملية المطلوبة، ثم تنفيذها ومتابعة نتائجها دون الحاجة إلى تشغيل الأوامر يدوياً في Terminal لكل عملية.
+
+## الهدف النهائي
+
+عند فتح Semaphore UI يجب أن يجد المسؤول مشروعاً باسم:
+
+Infrastructure Automation
+
+ويحتوي المشروع على:
+
+- Repositories.
+- Inventories.
+- Environment.
+- Key Store.
+- Templates.
+- Task History.
+- Schedules.
+
+ويجب أن تحتوي Templates على عمليات الإدارة الفعلية، مقسمة إلى مجموعات واضحة:
+
+1. Ubuntu Server Management.
+2. Docker Infrastructure.
+3. Odoo Management.
+4. PostgreSQL Administration.
+5. Traefik & Networking.
+6. Django Applications.
+7. Jenkins Integration.
+8. Backup & Recovery.
+9. Monitoring & Health Checks.
+
+**مهم جداً:** لا يكفي إنشاء ملفات Playbooks داخل المستودع. يجب تجهيزها وربطها فعلياً بقوالب Templates قابلة للتنفيذ من Semaphore UI.
+
+لا تنشئ مشروعاً منفصلاً عن المستودع الحالي، ولا تحذف أي تنفيذ موجود قبل دراسته وفهم علاقاته.
+
+---
+
+# 2. المبادئ الهندسية الأساسية
+
+التزم بالمبادئ التالية:
+
+1. Modular Architecture.
+2. Reusability.
+3. Idempotency.
+4. Security by Default.
+5. Least Privilege.
+6. Infrastructure as Code.
+7. DRY.
+8. SOLID.
+9. KISS.
+10. Fail-Safe Automation.
+11. Backward Compatibility.
+12. Production-Ready Documentation.
+
+يجب أن تكون جميع Ansible Roles وPlaybooks قابلة لإعادة الاستخدام على خوادم Ubuntu مختلفة.
+
+ممنوع تثبيت معلومات الجهاز الحالي داخل ملفات المشروع، مثل:
+
+- IP Address.
+- Hostname.
+- Username.
+- Password.
+- Database Credentials.
+- Application Paths.
+- Docker Container IDs.
+- Docker Network Names.
+- Domain Names.
+- Environment-Specific Configuration.
+
+استخدم:
+
+- Inventory Variables.
+- Group Variables.
+- Host Variables.
+- Ansible Vault.
+- Jinja2 Templates.
+- Semaphore Environment Variables.
+- Semaphore Key Store.
+
+يجب دعم البيئات التالية:
+
+- Build.
+- Development.
+- Staging.
+- Production.
+
+مع دعم localhost والخوادم البعيدة عن طريق SSH.
+
+---
+
+# 3. دراسة المستودع الحالي قبل التطوير
+
+قبل إجراء أي تعديل، قم بمراجعة شاملة للمستودع.
+
+افحص:
+
+- جميع المجلدات والملفات.
+- إعدادات Ansible.
+- ملفات التثبيت.
+- Playbooks.
+- Roles.
+- Inventories.
+- Group Variables.
+- Host Variables.
+- Templates.
+- Handlers.
+- ملفات Semaphore إن وجدت.
+- تكامل Jenkins.
+- ملفات التوثيق.
+- الاختبارات الموجودة.
+- الاعتماديات.
+- مسارات الملفات والمراجع بينها.
+
+حدد:
+
+1. الأجزاء المكتملة.
+2. الأجزاء غير المكتملة.
+3. الملفات المكررة.
+4. المراجع المعطلة.
+5. المشاكل الأمنية.
+6. الاعتماديات الناقصة.
+7. المسارات غير الصحيحة.
+8. الإعدادات الثابتة Hardcoded.
+9. أخطاء معالجة العمليات.
+10. الاختبارات الناقصة.
+11. مدى جاهزية المستودع للربط مع Semaphore UI.
+
+أنشئ:
+
+`docs/REPOSITORY_AUDIT.md`
+
+وأنشئ:
+
+`docs/IMPLEMENTATION_PLAN.md`
+
+لا تحذف أي ملف قبل معرفة وظيفته وتأثيره على بقية المشروع.
+
+لا تستبدل إعداداً يعمل دون توثيق التغيير واختباره.
+
+---
+
+# 4. المعمارية المستهدفة
+
+طوّر سبع وحدات رئيسية مستقلة، مع وحدات مساندة للنسخ الاحتياطي والمراقبة والتقارير.
+
+يجب أن تحتوي كل وحدة على:
+
+- Ansible Roles.
+- Playbooks.
+- Default Variables.
+- Templates عند الحاجة.
+- Handlers.
+- Validation Tasks.
+- Error Handling.
+- Documentation.
+- Automated Tests.
+
+يجب أن تعمل كل وحدة منفردة، كما يجب أن تكون قابلة للتشغيل ضمن عمليات إدارة البنية التحتية الكاملة.
+
+## الوحدة الأولى: Ubuntu Server Management
+
+الأولوية: حرجة.
+
+تطوير وحدة متكاملة لإدارة خادم Ubuntu.
+
+### A. معلومات النظام
+
+اجمع المعلومات التالية:
+
+- إصدار Ubuntu.
+- إصدار Kernel.
+- معلومات CPU.
+- معلومات RAM.
+- معلومات Swap.
+- مساحة الأقراص.
+- أنظمة الملفات.
+- وحدات التخزين المركبة.
+- واجهات الشبكة.
+- عناوين IP.
+- Hostname.
+- مدة تشغيل النظام.
+- الخدمات العاملة.
+- استهلاك موارد النظام.
+
+يجب توفير Playbook يعرض المعلومات بصيغة مفهومة، مع إمكانية إخراج JSON.
+
+### B. إدارة تحديثات النظام
+
+نفّذ:
+
+- تحديث APT.
+- تحديث الحزم.
+- تحديثات الأمان.
+- تثبيت الحزم.
+- حذف الحزم.
+- التحقق من الحزم.
+- تنظيف الحزم غير المستخدمة.
+- اكتشاف الحاجة إلى إعادة التشغيل.
+- إعادة تشغيل النظام عند الموافقة.
+
+الشروط:
+
+- دعم Check Mode.
+- دعم Dry Run.
+- عدم إعادة تشغيل الخادم تلقائياً دون موافقة صريحة.
+- إصدار تقرير بعد التنفيذ.
+
+### C. إدارة المستخدمين والصلاحيات
+
+نفّذ:
+
+- إنشاء المستخدمين.
+- تعديل المستخدمين.
+- حذف المستخدمين.
+- إدارة المجموعات.
+- إضافة المستخدمين إلى المجموعات.
+- إعداد صلاحيات sudo.
+- إدارة SSH Authorized Keys.
+- قفل الحسابات وفتحها.
+- التحقق من الصلاحيات.
+
+لا تعدّل حساب المسؤول الحالي بطريقة قد تؤدي إلى فقدان الوصول.
+
+لا تعرض كلمات المرور في السجلات.
+
+### D. إدارة SSH
+
+نفّذ:
+
+- تثبيت OpenSSH Server.
+- إدارة إعدادات SSH.
+- تغيير المنفذ.
+- تقييد دخول root.
+- إعداد Password Authentication.
+- إعداد Public Key Authentication.
+- فحص خدمة SSH.
+- إنشاء نسخة احتياطية من الإعدادات.
+
+تحقق من صحة الإعدادات قبل إعادة تشغيل SSH.
+
+لا تطبق تغييرات قد تؤدي إلى منع المسؤول من الدخول إلى الخادم.
+
+### E. إدارة Firewall
+
+استخدم UFW.
+
+نفّذ:
+
+- تثبيت UFW.
+- تفعيل وتعطيل Firewall بموافقة.
+- إضافة قواعد Allow وDeny.
+- حماية SSH.
+- فتح منافذ التطبيقات.
+- التحقق من القواعد.
+- عرض حالة Firewall.
+
+لا تفعّل UFW قبل التأكد من السماح باتصال SSH.
+
+### F. مراقبة موارد الخادم
+
+اجمع:
+
+- CPU Usage.
+- RAM Usage.
+- Swap Usage.
+- Disk Usage.
+- Inode Usage.
+- Load Average.
+- Network Information.
+- System Uptime.
+
+أنشئ تقارير JSON قابلة للاستخدام لاحقاً في Django.
+
+---
+
+## الوحدة الثانية: Docker Infrastructure Management
+
+الأولوية: حرجة.
+
+تطوير وحدة متكاملة لإدارة Docker.
+
+### A. تثبيت Docker
+
+نفّذ:
+
+- تثبيت Docker Engine.
+- تثبيت Docker CLI.
+- تثبيت Docker Compose Plugin.
+- تثبيت Docker Buildx Plugin.
+- إعداد Docker Daemon.
+- التحقق من تشغيل الخدمة.
+- التحقق من الإصدارات.
+
+استخدم طرق التثبيت الرسمية المناسبة لإصدار Ubuntu.
+
+### B. إدارة Containers
+
+يجب توفير العمليات التالية:
+
+- عرض جميع Containers.
+- فحص Container.
+- تشغيل Container.
+- إيقاف Container.
+- إعادة تشغيل Container.
+- Pause وUnpause.
+- حذف Container بموافقة.
+- فحص Health.
+- عرض Logs.
+- عرض استهلاك الموارد.
+- متابعة حالة التشغيل.
+
+دعم البحث والتصفية حسب:
+
+- Container Name.
+- Compose Project.
+- Docker Image.
+- Status.
+- Labels.
+
+### C. إدارة Docker Images
+
+نفّذ:
+
+- عرض Images.
+- Pull Images.
+- فحص Images.
+- حذف Images غير المستخدمة.
+- تحديث Images.
+- تنظيف Images.
+- التحقق من إصدار Image.
+
+لا تحذف Image مستخدمة من تطبيق يعمل.
+
+### D. إدارة Docker Networks
+
+نفّذ:
+
+- إنشاء Networks.
+- فحص Networks.
+- ربط Containers.
+- فصل Containers.
+- حذف Networks غير المستخدمة.
+- إدارة External Networks.
+
+### E. إدارة Docker Compose
+
+نفّذ:
+
+- اكتشاف Compose Projects.
+- فحص ملفات Compose.
+- تشغيل المشاريع.
+- إيقاف المشاريع.
+- إعادة تشغيل المشاريع.
+- تحديث الخدمات.
+- سحب Images الجديدة.
+- إعادة إنشاء خدمات محددة.
+- عرض Logs.
+- التحقق من Health.
+
+يجب دعم عدة مشاريع Compose مستقلة على الخادم نفسه.
+
+### F. تحديث التطبيقات
+
+اعتمد دورة عمل آمنة:
+
+1. فحص إعدادات التطبيق.
+2. إنشاء Backup عند الحاجة.
+3. سحب Image الجديدة.
+4. فحص Compose Configuration.
+5. نشر الخدمات المحدثة.
+6. التحقق من Health.
+7. تسجيل نتيجة النشر.
+8. توفير تعليمات Rollback.
+
+لا تحدّث قواعد بيانات الإنتاج تلقائياً دون موافقة.
+
+---
+
+## الوحدة الثالثة: Odoo Management
+
+الأولوية: حرجة.
+
+تطوير وحدة مستقلة لإدارة عدة نسخ Odoo.
+
+الإصدارات الأولية:
+
+- Odoo 17.
+- Odoo 19.
+
+يجب أن تدعم المعمارية إصدارات مستقبلية عن طريق الإعدادات، دون إعادة كتابة النظام.
+
+### A. اكتشاف نسخ Odoo
+
+يجب دعم إدارة عدة Odoo Instances مستقلة.
+
+اجمع لكل نسخة:
+
+- إصدار Odoo.
+- اسم Container.
+- Compose Project.
+- PostgreSQL Container.
+- إعدادات الاتصال بقاعدة البيانات.
+- مسارات Addons.
+- مسارات Configuration.
+- مسارات Filestore.
+- المنافذ.
+- Domains.
+- إعدادات Reverse Proxy.
+- حالة الخدمة.
+
+لا تفترض أن جميع نسخ Odoo لها أسماء Containers أو مسارات متطابقة.
+
+اجعل تعريف النسخ من خلال Inventory Variables.
+
+### B. عمليات Odoo
+
+وفّر:
+
+- تشغيل Odoo.
+- إيقاف Odoo.
+- إعادة تشغيل Odoo.
+- فحص حالة Odoo.
+- عرض Logs.
+- فحص إعدادات Container.
+- اختبار الاتصال بـ PostgreSQL.
+- فحص HTTP.
+- فحص WebSocket.
+- التحقق من Reverse Proxy.
+
+### C. النسخ الاحتياطي لقاعدة البيانات
+
+دعم:
+
+- PostgreSQL Custom Format.
+- SQL Backup.
+- Compression.
+- Timestamped Backups.
+- Retention Policies.
+- Backup Metadata.
+- Integrity Verification.
+
+### D. النسخ الاحتياطي لـ Filestore
+
+نفّذ:
+
+- اكتشاف Filestore الصحيح.
+- حفظ الملفات.
+- المحافظة على الصلاحيات والملكية قدر الإمكان.
+- ضغط النسخ.
+- إنشاء Checksums.
+- ربط نسخة قاعدة البيانات بنسخة Filestore الخاصة بها.
+
+يجب أن تتضمن النسخة الاحتياطية الكاملة لـ Odoo قاعدة البيانات وFilestore معاً.
+
+### E. استعادة النسخ الاحتياطية
+
+اعتمد الخطوات التالية:
+
+1. فحص ملفات النسخة.
+2. التحقق من Checksums.
+3. التحقق من توافق قاعدة البيانات.
+4. إنشاء وجهة الاستعادة.
+5. استعادة قاعدة البيانات.
+6. استعادة Filestore المرتبط بها.
+7. ضبط الصلاحيات.
+8. التحقق من تشغيل Odoo.
+9. تنفيذ Health Checks.
+
+لا تستبدل قاعدة إنتاج موجودة دون موافقة صريحة.
+
+### F. إدارة Custom Addons
+
+وفّر:
+
+- اكتشاف مجلدات Addons.
+- فحص بنية Addons.
+- نشر Addons.
+- تحديث Addons من Git.
+- نسخ Addons الحالية احتياطياً.
+- إدارة الصلاحيات.
+- إعادة تشغيل Odoo عند الحاجة.
+- تحديث Modules محددة بموافقة.
+- تسجيل تاريخ النشر.
+
+لا تنفّذ Upgrade لجميع Modules تلقائياً.
+
+---
+
+## الوحدة الرابعة: PostgreSQL Administration
+
+الأولوية: عالية.
+
+تطوير وحدة مستقلة لإدارة PostgreSQL.
+
+### A. اكتشاف PostgreSQL
+
+اكتشف:
+
+- PostgreSQL Installation.
+- PostgreSQL Version.
+- Running Services.
+- Docker PostgreSQL Containers.
+- Listening Ports.
+- Database Clusters.
+- Active Connections.
+- Database Sizes.
+
+دعم PostgreSQL المثبت مباشرة ودعم PostgreSQL داخل Docker.
+
+### B. إدارة قواعد البيانات
+
+وفّر:
+
+- إنشاء قاعدة بيانات.
+- حذف قاعدة بيانات بموافقة.
+- عرض قواعد البيانات.
+- عرض تفاصيل القواعد.
+- إنشاء المستخدمين.
+- تعديل المستخدمين.
+- حذف المستخدمين.
+- منح الصلاحيات.
+- سحب الصلاحيات.
+- إدارة Database Ownership.
+- فحص الاتصال.
+
+### C. النسخ الاحتياطي
+
+دعم:
+
+- pg_dump.
+- pg_dumpall عند الحاجة.
+- Custom Format.
+- Plain SQL.
+- Compression.
+- Scheduled Backups.
+- Retention Policies.
+- Backup Metadata.
+- Checksum Generation.
+
+### D. الاستعادة
+
+نفّذ:
+
+- استعادة قاعدة البيانات.
+- الاستعادة إلى قاعدة جديدة.
+- اختيار نسخة معينة.
+- التحقق من الاستعادة.
+- فحص توفر قاعدة البيانات.
+
+### E. التحقق من النسخ
+
+لا تعتبر نجاح أمر النسخ دليلاً كافياً على سلامة النسخة.
+
+نفّذ:
+
+- فحص وجود الملف.
+- فحص حجم الملف.
+- التحقق من Checksum.
+- فحص Metadata.
+- فحص PostgreSQL Archive.
+- اختبار Restore في قاعدة معزولة عند تفعيل ذلك.
+
+---
+
+## الوحدة الخامسة: Traefik & Networking
+
+الأولوية: عالية.
+
+تطوير وحدة لإدارة Reverse Proxy والشبكات.
+
+### A. إدارة Traefik
+
+نفّذ:
+
+- نشر Traefik.
+- إدارة Configuration.
+- Docker Provider Integration.
+- Entrypoints.
+- Routers.
+- Services.
+- Middlewares.
+- Dashboard Configuration.
+- Health Checks.
+- Log Collection.
+
+### B. إدارة Domains
+
+دعم Domains الخاصة بـ:
+
+- Odoo.
+- Django.
+- Jenkins.
+- تطبيقات Docker الأخرى.
+
+استخدم Jinja2 Templates وInventory Variables.
+
+لا تثبت أسماء Domains داخل Playbooks.
+
+### C. إدارة SSL
+
+دعم Let's Encrypt.
+
+نفّذ:
+
+- HTTP Challenge.
+- TLS Configuration.
+- Certificate Validation.
+- Expiration Monitoring.
+- حماية Certificate Storage.
+- التحقق من التجديد.
+
+لا تعرض Private Keys.
+
+### D. فحص الشبكات
+
+وفّر:
+
+- Port Availability.
+- Listening Ports.
+- DNS Resolution.
+- TCP Connectivity.
+- HTTP Health Checks.
+- Reverse Proxy Validation.
+- Docker Network Inspection.
+
+لا تغيّر Firewall أو إعدادات Proxy في الإنتاج دون فحص مسبق.
+
+---
+
+## الوحدة السادسة: Django Applications Management
+
+الأولوية: عالية.
+
+تطوير وحدة لإدارة ونشر عدة مشاريع Django.
+
+### A. اكتشاف التطبيقات
+
+دعم عدة مشاريع Django مستقلة.
+
+لكل مشروع يجب تعريف:
+
+- Application Name.
+- Git Repository.
+- Branch.
+- Deployment Directory.
+- Virtual Environment.
+- Python Version.
+- Environment File.
+- Database Connection.
+- Static Directory.
+- Media Directory.
+- Gunicorn Service.
+- Domain.
+- Reverse Proxy Settings.
+
+### B. النشر
+
+اعتمد الخطوات التالية:
+
+1. فحص متطلبات الخادم.
+2. Clone أو Update للمستودع.
+3. اختيار Branch أو Commit.
+4. إنشاء أو تحديث Virtual Environment.
+5. تثبيت Dependencies.
+6. فحص Environment Variables.
+7. تنفيذ Database Migrations.
+8. تنفيذ Collect Static.
+9. إعادة تشغيل Gunicorn.
+10. فحص التطبيق.
+
+دعم Rollback إلى إصدار سابق.
+
+### C. إدارة Environment
+
+وفّر:
+
+- إنشاء ملفات البيئة.
+- تحديث المتغيرات.
+- التحقق من المتغيرات المطلوبة.
+- حماية القيم الحساسة.
+- ضبط الصلاحيات.
+- نسخ الإعدادات احتياطياً بطريقة آمنة.
+
+لا ترفع ملفات `.env` إلى Git ولا تعرض الأسرار في السجلات.
+
+### D. نسخ قواعد البيانات والملفات
+
+دعم:
+
+- PostgreSQL Backup.
+- SQLite Backup عند استخدامه.
+- Media Backup.
+- Static Backup عند الحاجة.
+- Retention.
+- Verification.
+- Restore.
+
+### E. إدارة الخدمات
+
+دعم:
+
+- Gunicorn.
+- Systemd.
+- Nginx عند استخدامه.
+- Traefik عند استخدامه.
+
+لا تفترض أن جميع مشاريع Django تستخدم طريقة نشر واحدة.
+
+---
+
+## الوحدة السابعة: Jenkins Integration
+
+الأولوية: عالية.
+
+تطوير تكامل Jenkins لأتمتة عمليات التطوير والنشر.
+
+### A. تكامل Jenkins
+
+دعم:
+
+- Jenkins Health Checks.
+- Jenkins API.
+- استرجاع Build Status.
+- تشغيل Jobs.
+- Deployment Pipelines.
+- تقارير نتائج Build.
+
+### B. تنفيذ Ansible
+
+السماح لـ Jenkins بتنفيذ Playbooks معتمدة.
+
+دعم:
+
+- اختيار Inventory.
+- اختيار Environment.
+- Playbook Parameters.
+- إدارة Credentials.
+- Execution Logs.
+- جمع النتائج.
+
+### C. أتمتة النشر
+
+إنشاء Pipeline Templates قابلة لإعادة الاستخدام لـ:
+
+- Django Deployment.
+- Docker Application Updates.
+- Odoo Addons Deployment.
+- Infrastructure Configuration.
+- Scheduled Maintenance.
+
+### D. النسخ الاحتياطي المجدول
+
+دعم:
+
+- Daily Backups.
+- Weekly Backups.
+- Monthly Backups.
+- Retention Policies.
+- Backup Verification.
+- Failure Notifications.
+
+### E. تقارير التنفيذ
+
+أنشئ تقارير تشمل:
+
+- Job Name.
+- Execution ID.
+- Target Server.
+- Inventory.
+- Start Time.
+- End Time.
+- Duration.
+- Execution Status.
+- Changed Tasks.
+- Failed Tasks.
+- Warnings.
+- Backup Paths.
+
+دعم JSON وHuman-Readable Reports.
+
+---
+
+# 5. التكامل الرئيسي مع Semaphore UI
+
+## هذا القسم من أهم متطلبات المشروع
+
+يجب أن يكون Semaphore هو واجهة إدارة وتنفيذ عمليات Ansible.
+
+لا يكفي إعداد Playbooks أو إنشاء مجلد باسم semaphore داخل المستودع.
+
+المطلوب هو إعداد المستودع بطريقة تسمح بربطه بمشروع Semaphore، وإنشاء Templates منظمة وقابلة للتشغيل من الواجهة.
+
+## A. إنشاء مشروع Semaphore
+
+يجب تجهيز مشروع باسم:
+
+Infrastructure Automation
+
+ويجب توثيق طريقة إنشائه وربط إعداداته.
+
+يجب أن يحتوي المشروع على العناصر التالية:
+
+| القسم | المحتوى |
+|---|---|
+| Projects | Infrastructure Automation |
+| Repositories | مستودع GitHub الخاص بالمشروع |
+| Inventory | Build / Dev / Staging / Prod |
+| Environment | متغيرات التشغيل والبيئة |
+| Key Store | مفاتيح SSH وAnsible Vault |
+| Templates | قوالب تنفيذ Playbooks |
+| Task History | سجل عمليات التنفيذ |
+| Schedules | المهام المجدولة |
+
+استخدم أسماء الأقسام والإمكانات التي يدعمها إصدار Semaphore المثبت فعلياً، ولا تفترض وجود ميزة غير مدعومة.
+
+## B. ربط GitHub Repository
+
+اربط مستودع:
+
+InstallingAnsibleDeployment
+
+بمشروع Infrastructure Automation داخل Semaphore.
+
+المتطلبات:
+
+- استخدام Repository URL.
+- دعم Git Authentication عند الحاجة.
+- تحديد Branch.
+- تحديد مسار Playbooks.
+- تحديث المستودع عند تنفيذ المهام وفق إعدادات Semaphore.
+- التحقق من إمكانية الوصول إلى ملفات Playbooks.
+- توثيق طريقة تحديث المستودع.
+
+لا تضع GitHub Tokens أو كلمات المرور داخل ملفات المستودع.
+
+## C. إعداد Inventories
+
+أنشئ Inventories للبيئات:
+
+1. Build.
+2. Dev.
+3. Staging.
+4. Prod.
+
+يجب أن تسمح كل Inventory بإدارة خادم واحد أو عدة خوادم.
+
+أمثلة تنظيمية:
+
+| Inventory Name | Inventory Type | Path |
+|---|---|---|
+| Build | Static | حسب إعداد Semaphore |
+| Dev | File | `inventories/dev/hosts.yml` |
+| Staging | File | `inventories/staging/hosts.yml` |
+| Prod | File | `inventories/prod/hosts.yml` |
+
+يجب أن تكون المسارات متوافقة مع إعداد Repository ومسارات العمل داخل Semaphore.
+
+لا تضع IP ثابتاً أو بيانات اتصال خاصة بجهاز التطوير داخل ملفات الأمثلة.
+
+## D. إعداد Environment
+
+أنشئ إعدادات Environment مناسبة لتشغيل Playbooks.
+
+يجب أن تدعم:
+
+- متغيرات النظام.
+- متغيرات التطبيقات.
+- متغيرات Docker.
+- متغيرات PostgreSQL.
+- متغيرات Odoo.
+- متغيرات Django.
+- متغيرات النسخ الاحتياطي.
+- متغيرات المراقبة.
+- متغيرات بيئة التشغيل.
+
+يجب فصل إعدادات Development عن Production.
+
+لا تخزن كلمات المرور أو المفاتيح السرية كنصوص مكشوفة.
+
+## E. إعداد Key Store
+
+استخدم Key Store لإدارة بيانات الوصول.
+
+ادعم:
+
+- SSH Private Keys.
+- SSH Connection Credentials.
+- Ansible Vault Password.
+- مفاتيح الوصول إلى الخوادم.
+- بيانات الاعتماد المطلوبة للتكاملات.
+
+يجب ألا يحتوي المستودع على مفاتيح خاصة حقيقية.
+
+## F. إنشاء Templates داخل Semaphore UI
+
+هذه نقطة إلزامية.
+
+يجب إنشاء Templates لجميع العمليات المهمة وربط كل Template بـ:
+
+- Repository.
+- Inventory.
+- Playbook Path.
+- Environment.
+- Key Store.
+- Execution Parameters عند الحاجة.
+
+يجب ألا تكون Templates مجرد أمثلة نظرية، بل يجب أن تشير إلى Playbooks موجودة وصحيحة وقابلة للتنفيذ.
+
+### المجموعة الأولى: Ubuntu Server Management
+
+أنشئ Templates التالية:
+
+| Template Name | Playbook |
+|---|---|
+| System - Information | `playbooks/system/info.yml` |
+| System - Update Packages | `playbooks/system/update.yml` |
+| System - Health Check | `playbooks/system/health_check.yml` |
+| System - Resource Monitoring | `playbooks/system/monitoring.yml` |
+| System - User List | `playbooks/system/users_list.yml` |
+| System - User Management | `playbooks/system/users_manage.yml` |
+| System - SSH Status | `playbooks/system/ssh_status.yml` |
+| System - SSH Configuration | `playbooks/system/ssh_configure.yml` |
+| System - Firewall Status | `playbooks/system/firewall_status.yml` |
+| System - Firewall Management | `playbooks/system/firewall_manage.yml` |
+
+### المجموعة الثانية: Docker Infrastructure
+
+| Template Name | Playbook |
+|---|---|
+| Docker - Install | `playbooks/docker/install.yml` |
+| Docker - Health Check | `playbooks/docker/health_check.yml` |
+| Docker - List Containers | `playbooks/docker/list_containers.yml` |
+| Docker - Inspect Container | `playbooks/docker/inspect_container.yml` |
+| Docker - Start Container | `playbooks/docker/start_container.yml` |
+| Docker - Stop Container | `playbooks/docker/stop_container.yml` |
+| Docker - Restart Container | `playbooks/docker/restart_container.yml` |
+| Docker - Container Logs | `playbooks/docker/container_logs.yml` |
+| Docker - Resource Usage | `playbooks/docker/resource_usage.yml` |
+| Docker - List Images | `playbooks/docker/list_images.yml` |
+| Docker - Update Images | `playbooks/docker/update_images.yml` |
+| Docker - Network Management | `playbooks/docker/network_manage.yml` |
+| Docker - Compose Up | `playbooks/docker/compose_up.yml` |
+| Docker - Compose Down | `playbooks/docker/compose_down.yml` |
+| Docker - Compose Restart | `playbooks/docker/compose_restart.yml` |
+| Docker - Compose Update | `playbooks/docker/compose_update.yml` |
+
+### المجموعة الثالثة: Odoo Management
+
+| Template Name | Playbook |
+|---|---|
+| Odoo - List Instances | `playbooks/odoo/list_instances.yml` |
+| Odoo 17 - Status | `playbooks/odoo/health_check.yml` |
+| Odoo 19 - Status | `playbooks/odoo/health_check.yml` |
+| Odoo - Start Instance | `playbooks/odoo/start.yml` |
+| Odoo - Stop Instance | `playbooks/odoo/stop.yml` |
+| Odoo - Restart Instance | `playbooks/odoo/restart.yml` |
+| Odoo - Logs | `playbooks/odoo/logs.yml` |
+| Odoo - Database Backup | `playbooks/odoo/backup_database.yml` |
+| Odoo - Filestore Backup | `playbooks/odoo/backup_filestore.yml` |
+| Odoo - Full Backup | `playbooks/odoo/backup_full.yml` |
+| Odoo - Restore Backup | `playbooks/odoo/restore.yml` |
+| Odoo - Addons Validation | `playbooks/odoo/addons_validate.yml` |
+| Odoo - Deploy Addons | `playbooks/odoo/addons_deploy.yml` |
+| Odoo - Update Selected Modules | `playbooks/odoo/update_modules.yml` |
+
+يجب أن يدعم اختيار نسخة Odoo من خلال متغير واضح، مثل:
+
+`odoo_instance`
+
+وتكون القيمة مثلاً:
+
+- odoo17.
+- odoo19.
+
+يجب ألا يعتمد Playbook على اسم Container ثابت.
+
+### المجموعة الرابعة: PostgreSQL Administration
+
+| Template Name | Playbook |
+|---|---|
+| PostgreSQL - Status | `playbooks/postgresql/health_check.yml` |
+| PostgreSQL - List Databases | `playbooks/postgresql/list_databases.yml` |
+| PostgreSQL - Database Information | `playbooks/postgresql/database_info.yml` |
+| PostgreSQL - Create Database | `playbooks/postgresql/create_database.yml` |
+| PostgreSQL - Delete Database | `playbooks/postgresql/delete_database.yml` |
+| PostgreSQL - User Management | `playbooks/postgresql/users_manage.yml` |
+| PostgreSQL - Backup Database | `playbooks/postgresql/backup.yml` |
+| PostgreSQL - Restore Database | `playbooks/postgresql/restore.yml` |
+| PostgreSQL - Verify Backup | `playbooks/postgresql/verify_backup.yml` |
+| PostgreSQL - Connections | `playbooks/postgresql/connections.yml` |
+
+### المجموعة الخامسة: Traefik & Networking
+
+| Template Name | Playbook |
+|---|---|
+| Traefik - Status | `playbooks/networking/traefik_status.yml` |
+| Traefik - Health Check | `playbooks/networking/traefik_health.yml` |
+| Traefik - Configuration Validation | `playbooks/networking/traefik_validate.yml` |
+| Traefik - Router Inspection | `playbooks/networking/routers.yml` |
+| Traefik - SSL Certificate Check | `playbooks/networking/ssl_check.yml` |
+| Networking - Port Check | `playbooks/networking/port_check.yml` |
+| Networking - DNS Check | `playbooks/networking/dns_check.yml` |
+| Networking - Connectivity Check | `playbooks/networking/connectivity.yml` |
+| Docker - Network Inspection | `playbooks/networking/docker_networks.yml` |
+
+### المجموعة السادسة: Django Applications
+
+| Template Name | Playbook |
+|---|---|
+| Django - List Applications | `playbooks/django/list_applications.yml` |
+| Django - Application Status | `playbooks/django/status.yml` |
+| Django - Health Check | `playbooks/django/health_check.yml` |
+| Django - Deploy Application | `playbooks/django/deploy.yml` |
+| Django - Update Application | `playbooks/django/update.yml` |
+| Django - Restart Gunicorn | `playbooks/django/restart_gunicorn.yml` |
+| Django - Run Migrations | `playbooks/django/migrate.yml` |
+| Django - Collect Static | `playbooks/django/collectstatic.yml` |
+| Django - Backup Database | `playbooks/django/backup_database.yml` |
+| Django - Backup Media | `playbooks/django/backup_media.yml` |
+| Django - Restore Backup | `playbooks/django/restore.yml` |
+
+يجب دعم اختيار المشروع من خلال متغير:
+
+`django_application`
+
+مع إمكانية إدارة أكثر من مشروع Django على الخادم نفسه.
+
+### المجموعة السابعة: Jenkins Integration
+
+| Template Name | Playbook |
+|---|---|
+| Jenkins - Status | `playbooks/jenkins/status.yml` |
+| Jenkins - Health Check | `playbooks/jenkins/health_check.yml` |
+| Jenkins - List Jobs | `playbooks/jenkins/list_jobs.yml` |
+| Jenkins - Trigger Job | `playbooks/jenkins/trigger_job.yml` |
+| Jenkins - Build Status | `playbooks/jenkins/build_status.yml` |
+| Jenkins - Deployment | `playbooks/jenkins/deploy.yml` |
+| Jenkins - Integration Test | `playbooks/jenkins/integration_test.yml` |
+
+### المجموعة الثامنة: Backup & Recovery
+
+| Template Name | Playbook |
+|---|---|
+| Backup - Full Infrastructure | `playbooks/backup/full_backup.yml` |
+| Backup - PostgreSQL | `playbooks/backup/postgresql.yml` |
+| Backup - Odoo | `playbooks/backup/odoo.yml` |
+| Backup - Django | `playbooks/backup/django.yml` |
+| Backup - List Backups | `playbooks/backup/list.yml` |
+| Backup - Verify | `playbooks/backup/verify.yml` |
+| Backup - Restore | `playbooks/backup/restore.yml` |
+| Backup - Retention Cleanup | `playbooks/backup/retention.yml` |
+
+### المجموعة التاسعة: Monitoring & Health Checks
+
+| Template Name | Playbook |
+|---|---|
+| Monitoring - Server Health | `playbooks/monitoring/server_health.yml` |
+| Monitoring - CPU & RAM | `playbooks/monitoring/resources.yml` |
+| Monitoring - Disk Usage | `playbooks/monitoring/disk.yml` |
+| Monitoring - Docker Health | `playbooks/monitoring/docker.yml` |
+| Monitoring - Application Health | `playbooks/monitoring/applications.yml` |
+| Monitoring - Infrastructure Overview | `playbooks/monitoring/overview.yml` |
+
+ملاحظة تنفيذية: هذه أسماء Templates وPlaybooks مستهدفة. أنشئ الملفات التي لا توجد حالياً بعد مراجعة المستودع، ولا تنشئ Templates تشير إلى ملفات غير موجودة. يجب توثيق أي وظيفة غير مكتملة بدلاً من عرضها كوظيفة جاهزة.
+
+## G. متغيرات التشغيل داخل Templates
+
+يجب أن تسمح Templates بإدخال المتغيرات اللازمة للعملية.
+
+أمثلة:
+
+### Docker Restart
+
+- `container_name`.
+- `docker_host`.
+- `confirm_operation`.
+
+### Odoo Backup
+
+- `odoo_instance`.
+- `backup_type`.
+- `backup_destination`.
+- `retention_days`.
+
+### PostgreSQL Backup
+
+- `database_name`.
+- `postgres_instance`.
+- `backup_format`.
+- `backup_destination`.
+
+### Django Deployment
+
+- `django_application`.
+- `git_branch`.
+- `deployment_version`.
+- `confirm_production`.
+
+### System Update
+
+- `update_cache`.
+- `upgrade_type`.
+- `reboot_required`.
+- `confirm_reboot`.
+
+استخدم متغيرات Ansible وSemaphore المدعومة في الإصدار المثبت.
+
+يجب التحقق من صحة المدخلات قبل تنفيذ العمليات.
+
+لا تسمح بتمرير أوامر Shell عشوائية من حقول الإدخال.
+
+## H. Task History
+
+يجب الاستفادة من Task History في Semaphore لمتابعة كل عملية.
+
+يجب أن يستطيع المسؤول معرفة:
+
+- اسم Template.
+- وقت التنفيذ.
+- المستخدم الذي بدأ العملية، إذا كانت بيانات المستخدم متاحة.
+- Inventory المستخدمة.
+- الخادم المستهدف.
+- حالة التنفيذ.
+- مدة التنفيذ.
+- العمليات التي نجحت.
+- العمليات التي فشلت.
+- رسائل الأخطاء.
+- مخرجات التنفيذ.
+
+لا تعتمد على سجلات Semaphore وحدها لحفظ بيانات النسخ الاحتياطية أو التقارير طويلة الأجل؛ احفظ تقارير العمليات المطلوبة في مسار تقارير مركزي أيضاً.
+
+## I. Schedules
+
+أنشئ Scheduled Tasks للعمليات التي تتطلب جدولة، مثل:
+
+- تحديث معلومات الخوادم.
+- فحص الخدمات.
+- مراقبة استهلاك الموارد.
+- النسخ الاحتياطي اليومي.
+- النسخ الاحتياطي الأسبوعي.
+- فحص SSL.
+- فحص حالة Odoo.
+- فحص PostgreSQL.
+- التحقق من سلامة النسخ الاحتياطية.
+
+استخدم ميزة Schedules في Semaphore عندما تكون مدعومة.
+
+لا تكرر جدولة العملية نفسها دون سبب بين Semaphore وJenkins وCron.
+
+## J. Semaphore API Integration
+
+جهّز طبقة تكامل تسمح لتطبيق Django مستقبلاً بالتواصل مع Semaphore API.
+
+يجب أن تدعم:
+
+- التحقق من الاتصال.
+- استعراض Projects.
+- استعراض Templates.
+- استعراض Inventories.
+- تشغيل Template مع المتغيرات المطلوبة.
+- استرجاع Task ID.
+- متابعة حالة التنفيذ.
+- استرجاع نتائج التنفيذ.
+- عرض سجل العمليات داخل Django.
+
+استخدم API Token آمن، ولا تخزنه داخل المستودع.
+
+لا تجعل Django ينفذ أوامر Shell مباشرة على الخادم؛ يجب أن تمر العمليات المعتمدة من خلال Semaphore.
+
+## K. مسؤوليات Semaphore وJenkins
+
+يجب الفصل بين مسؤوليات النظامين.
+
+### Semaphore مسؤول عن:
+
+- تنفيذ Ansible Playbooks.
+- إدارة Inventories.
+- إدارة مفاتيح الاتصال.
+- إدارة Templates.
+- تشغيل العمليات.
+- متابعة Execution History.
+- جدولة مهام Ansible.
+- عرض نتائج التنفيذ.
+
+### Jenkins مسؤول عن:
+
+- CI/CD.
+- بناء التطبيقات.
+- Git-triggered Workflows.
+- Application Deployment Pipelines.
+- Release Automation.
+- تنفيذ الاختبارات.
+- التكامل مع دورة تطوير التطبيقات.
+
+تجنب تشغيل العملية نفسها من النظامين دون تحديد مسؤول واضح عنها.
+
+---
+
+# 6. بنية Configuration وInventories
+
+أنشئ نظام إعدادات قابل لإعادة الاستخدام.
+
+البنية المستهدفة:
+
+```text
+inventories/
+├── build/
+│   └── hosts.yml
+├── dev/
+│   ├── hosts.yml
+│   └── group_vars/
+├── staging/
+│   ├── hosts.yml
+│   └── group_vars/
+└── prod/
+    ├── hosts.yml
+    └── group_vars/
+```
+
+ادعم:
+
+- Localhost.
+- Remote SSH.
+- Multiple Hosts.
+- Different SSH Users.
+- SSH Private Keys.
+- Different Ubuntu Versions.
+
+استخدم ملفات Variables منفصلة لكل بيئة.
+
+أنشئ إعدادات قابلة للتخصيص لـ:
+
+- Docker.
+- Odoo.
+- PostgreSQL.
+- Redis.
+- Traefik.
+- Django.
+- Jenkins.
+
+يجب أن تكون Inventories متوافقة مع Semaphore، وأن يتم توثيق طريقة ربط كل Inventory داخل واجهته.
+
+---
+
+# 7. بنية المستودع الاحترافية
+
+طوّر المستودع الحالي إلى بنية منظمة.
+
+البنية المستهدفة:
+
+```text
+InstallingAnsibleDeployment/
+│
+├── ansible.cfg
+├── requirements.yml
+├── pyproject.toml
+├── Makefile
+├── README.md
+├── CHANGELOG.md
+├── LICENSE
+│
+├── installation/
+│   ├── install.sh
+│   ├── preflight.sh
+│   ├── verify.sh
+│   └── uninstall.sh
+│
+├── inventories/
+│   ├── build/
+│   ├── dev/
+│   ├── staging/
+│   └── prod/
+│
+├── group_vars/
+├── host_vars/
+│
+├── playbooks/
+│   ├── system/
+│   ├── docker/
+│   ├── odoo/
+│   ├── postgresql/
+│   ├── networking/
+│   ├── django/
+│   ├── jenkins/
+│   ├── backup/
+│   ├── monitoring/
+│   └── semaphore/
+│
+├── roles/
+│   ├── common/
+│   ├── ubuntu_server/
+│   ├── users/
+│   ├── ssh/
+│   ├── firewall/
+│   ├── docker/
+│   ├── odoo/
+│   ├── postgresql/
+│   ├── redis/
+│   ├── traefik/
+│   ├── django/
+│   ├── jenkins/
+│   ├── backup/
+│   └── monitoring/
+│
+├── templates/
+├── files/
+├── collections/
+│
+├── semaphore/
+│   ├── README.md
+│   ├── setup/
+│   ├── templates/
+│   ├── examples/
+│   ├── environments/
+│   ├── inventories/
+│   └── documentation/
+│
+├── jenkins/
+│   ├── pipelines/
+│   └── shared-libraries/
+│
+├── scripts/
+│   ├── install/
+│   ├── validation/
+│   ├── reporting/
+│   └── semaphore/
+│
+├── tests/
+│   ├── syntax/
+│   ├── unit/
+│   ├── integration/
+│   ├── security/
+│   └── idempotency/
+│
+├── reports/
+│
+└── docs/
+    ├── architecture/
+    ├── installation/
+    ├── configuration/
+    ├── modules/
+    ├── semaphore/
+    ├── security/
+    ├── operations/
+    ├── troubleshooting/
+    └── development/
+```
+
+هذه بنية مستهدفة وليست أمراً بإنشاء ملفات مكررة. افحص البنية الحالية وادمج الموجود بشكل صحيح.
+
+## متطلبات مجلد semaphore/
+
+يجب أن يحتوي على:
+
+- توثيق إنشاء Semaphore Project.
+- إعداد Repository.
+- إعداد Inventories.
+- إعداد Environment.
+- إعداد Key Store.
+- قائمة Templates.
+- ربط كل Template بـ Playbook.
+- المتغيرات المطلوبة لكل Template.
+- إعداد Schedules.
+- طريقة تشغيل المهام.
+- طريقة متابعة النتائج.
+- أمثلة API.
+- خطوات التحقق من نجاح الربط.
+
+إذا كان إصدار Semaphore يدعم الاستيراد الآلي أو تعريف الموارد من ملفات إعدادات، فاستخدم الطريقة الرسمية المناسبة له.
+
+إذا لم يدعم إنشاء كل الموارد آلياً، وفّر إعداداً موثقاً أو سكربتاً آمناً باستخدام API المدعومة، مع توضيح ما يتطلب إنشاءه يدوياً.
+
+لا تفترض أن إنشاء ملفات YAML داخل مجلد semaphore يؤدي تلقائياً إلى ظهور Templates داخل واجهة Semaphore.
+
+---
+
+# 8. التثبيت على أي Ubuntu Server
+
+هذا متطلب أساسي.
+
+أنشئ:
+
+`installation/install.sh`
+
+يجب أن يقوم التثبيت بـ:
+
+1. اكتشاف نظام التشغيل.
+2. اكتشاف إصدار Ubuntu.
+3. التحقق من Python.
+4. التحقق من الحزم المطلوبة.
+5. تثبيت Git عند الحاجة.
+6. تثبيت pipx عند الحاجة.
+7. تثبيت Ansible.
+8. تثبيت Ansible Collections المطلوبة.
+9. تجهيز مجلد المشروع.
+10. إعداد Ansible.
+11. تجهيز Inventory.
+12. فحص الإعدادات.
+13. تشغيل اختبارات التحقق.
+14. إنشاء تقرير التثبيت.
+
+يجب أن يعمل على Ubuntu جديد، وأن يكون آمناً عند إعادة تشغيله.
+
+لا تثبّت أو تستبدل Odoo أو PostgreSQL أو Docker أو Jenkins أو Traefik تلقائياً أثناء التثبيت الأولي لـ Ansible.
+
+يجب أن تكون عمليات نشر البنية التحتية اختيارية ومنفصلة.
+
+أوامر التشغيل الأساسية:
+
+```bash
+sudo bash installation/install.sh
+```
+
+التحقق:
+
+```bash
+ansible-playbook playbooks/system/verify.yml
+```
+
+فحص النظام:
+
+```bash
+ansible-playbook playbooks/system/health_check.yml
+```
+
+فحص Docker:
+
+```bash
+ansible-playbook playbooks/docker/health_check.yml
+```
+
+فحص Odoo:
+
+```bash
+ansible-playbook playbooks/odoo/health_check.yml
+```
+
+---
+
+# 9. واجهة CLI
+
+أنشئ CLI احترافياً باسم:
+
+`infrastructure-manager`
+
+يكون CLI واجهة خفيفة لتشغيل Playbooks المعتمدة، ولا يستبدل Semaphore UI.
+
+أمثلة:
+
+```bash
+infrastructure-manager system info
+infrastructure-manager system update
+infrastructure-manager system users list
+infrastructure-manager system firewall status
+
+infrastructure-manager docker list
+infrastructure-manager docker start <container>
+infrastructure-manager docker stop <container>
+infrastructure-manager docker restart <container>
+
+infrastructure-manager odoo list
+infrastructure-manager odoo status 19
+infrastructure-manager odoo backup 19
+
+infrastructure-manager postgres databases list
+infrastructure-manager postgres backup <database>
+
+infrastructure-manager traefik status
+infrastructure-manager django deploy <application>
+
+infrastructure-manager backup list
+infrastructure-manager monitoring health
+```
+
+دعم الخيارات:
+
+- `--inventory`
+- `--limit`
+- `--check`
+- `--diff`
+- `--verbose`
+- `--timeout`
+- `--json`
+
+لا تسمح بتنفيذ أوامر Shell عشوائية من المستخدم.
+
+---
+
+# 10. معالجة الأخطاء وسلامة التنفيذ
+
+يجب أن تطبق جميع Playbooks:
+
+- التحقق من المدخلات.
+- التحقق من المتطلبات.
+- فحص الإعدادات قبل التغيير.
+- استخدام Handlers.
+- اكتشاف فشل العمليات.
+- حفظ السجلات.
+- عرض رسائل خطأ مفهومة.
+- منع العمليات التدميرية افتراضياً.
+- دعم Check Mode عند الإمكان.
+- دعم Rollback عند الإمكان.
+
+تتطلب العمليات التالية موافقة صريحة:
+
+- حذف قاعدة بيانات.
+- استعادة قاعدة بيانات.
+- حذف مستخدم.
+- حذف Container.
+- حذف Docker Volume.
+- تغيير Firewall.
+- نشر تطبيق في Production.
+- إعادة تشغيل النظام.
+
+استخدم متغيراً مثل:
+
+```yaml
+confirm_destructive_operation: false
+```
+
+اجعل الوضع الافتراضي آمناً.
+
+يجب أن تحتوي Templates الحساسة على متغيرات تأكيد واضحة، وألا تنفذ عمليات الحذف أو الاستعادة بمجرد الضغط على Run دون التحقق من الموافقة.
+
+---
+
+# 11. متطلبات الأمان
+
+طبّق:
+
+- Ansible Vault.
+- SSH Keys.
+- Least Privilege.
+- Sudo Controls.
+- File Permissions.
+- Secrets Protection.
+- Input Validation.
+- Audit Logging.
+- Secure API Tokens.
+- Restricted Docker Access.
+
+ممنوع:
+
+- حفظ كلمات المرور داخل Git.
+- حفظ Private SSH Keys داخل المستودع.
+- حفظ ملفات Production `.env`.
+- عرض Credentials في Logs.
+- حفظ الأسرار في تقارير نصية مكشوفة.
+- تعريض Docker Socket عبر API غير محمية.
+- تعطيل Firewall دون موافقة.
+
+أنشئ:
+
+`docs/security/SECURITY.md`
+
+ووفّر أمثلة آمنة لـ Ansible Vault.
+
+---
+
+# 12. الاختبارات وضمان الجودة
+
+الاختبارات إلزامية.
+
+### A. Syntax Tests
+
+```bash
+ansible-playbook --syntax-check
+```
+
+### B. Lint Tests
+
+```bash
+ansible-lint
+```
+
+### C. Idempotency Tests
+
+شغّل Playbooks المناسبة مرتين.
+
+يجب ألا ينتج عن التشغيل الثاني تغييرات غير ضرورية.
+
+### D. Integration Tests
+
+اختبر على Ubuntu افتراضي نظيف قبل إعلان التوافق.
+
+### E. Security Tests
+
+تحقق من:
+
+- حماية الأسرار.
+- صلاحيات الملفات.
+- إعداد SSH.
+- Firewall.
+- Privilege Escalation.
+- حماية العمليات التدميرية.
+- حماية Semaphore Credentials.
+
+### F. Failure Tests
+
+اختبر:
+
+- Inventory غير صالح.
+- خادم غير متاح.
+- اعتماديات ناقصة.
+- بيانات اعتماد خاطئة.
+- خدمة متوقفة.
+- Configuration غير صالح.
+- ملفات Backup مفقودة.
+- Playbook غير موجود.
+- فشل الاتصال بـ Semaphore.
+
+### G. Semaphore Integration Tests
+
+تحقق من:
+
+1. اتصال Semaphore بالمستودع.
+2. إمكانية الوصول إلى Playbooks.
+3. صحة Inventories.
+4. صحة Environment.
+5. صحة مفاتيح SSH.
+6. ظهور Templates.
+7. تشغيل Templates.
+8. نجاح تنفيذ العمليات.
+9. ظهور Task History.
+10. عمل Schedules.
+11. صحة نتائج التنفيذ.
+
+لا تعلن عن نجاح أي اختبار لم يتم تنفيذه فعلياً.
+
+---
+
+# 13. التوثيق
+
+أنشئ توثيقاً شاملاً باللغة الإنجليزية داخل المستودع، مع إمكانية توفير دليل استخدام عربي للمسؤول.
+
+يجب أن يحتوي README.md على:
+
+- تعريف المشروع.
+- المعمارية.
+- المميزات.
+- المتطلبات.
+- التثبيت.
+- الإعدادات.
+- Quick Start.
+- أوامر CLI.
+- استخدام Ansible.
+- تكامل Semaphore.
+- تكامل Jenkins.
+- الأمان.
+- معالجة المشكلات.
+
+أنشئ توثيقاً مستقلاً لكل وحدة.
+
+ويجب أن يحتوي توثيق كل وحدة على:
+
+1. الهدف.
+2. المعمارية.
+3. الاعتماديات.
+4. المتغيرات.
+5. التثبيت.
+6. الإعداد.
+7. أوامر Playbooks.
+8. النتائج المتوقعة.
+9. معالجة الأخطاء.
+10. اعتبارات الأمان.
+11. خطوات الاختبار.
+
+## توثيق Semaphore بشكل خاص
+
+أنشئ:
+
+`docs/semaphore/SEMAPHORE_SETUP.md`
+
+ويجب أن يشرح بالتفصيل:
+
+- إنشاء Project.
+- إضافة Repository.
+- إعداد Branch.
+- إعداد Inventory.
+- إعداد Environment.
+- إعداد Key Store.
+- إنشاء Templates.
+- ربط Templates بالـ Playbooks.
+- تحديد متغيرات التشغيل.
+- تشغيل المهام.
+- متابعة Task History.
+- إعداد Schedules.
+- اختبار الاتصال بالخوادم.
+- استكشاف أخطاء Semaphore.
+
+أنشئ أيضاً:
+
+`docs/semaphore/TEMPLATES_CATALOG.md`
+
+ويحتوي على جدول كامل لجميع Templates وأسمائها ومسارات Playbooks والمدخلات المطلوبة والبيئة المناسبة لكل عملية.
+
+---
+
+# 14. استراتيجية التنفيذ على مراحل
+
+لا تنفّذ جميع الوظائف دفعة واحدة دون مراجعة واختبار.
+
+نفّذ التطوير على المراحل التالية:
+
+### المرحلة الأولى: Repository Audit
+
+دراسة المستودع الحالي وتحديد ما يجب الحفاظ عليه وتطويره.
+
+### المرحلة الثانية: Core Ansible
+
+إعداد Ansible Configuration وInventories وVariables.
+
+### المرحلة الثالثة: Ubuntu Server Management
+
+إنجاز إدارة الخادم والنظام والمستخدمين وSSH وFirewall والمراقبة.
+
+### المرحلة الرابعة: Docker Infrastructure
+
+إنجاز إدارة Docker وContainers وNetworks وCompose.
+
+### المرحلة الخامسة: PostgreSQL Administration
+
+إنجاز إدارة قواعد البيانات والنسخ والاستعادة.
+
+### المرحلة السادسة: Odoo Management
+
+إنجاز إدارة Odoo 17 وOdoo 19 بصورة مستقلة.
+
+### المرحلة السابعة: Traefik & Networking
+
+إنجاز إدارة Reverse Proxy وDomains وSSL والشبكات.
+
+### المرحلة الثامنة: Django Applications
+
+إنجاز إدارة ونشر مشاريع Django.
+
+### المرحلة التاسعة: Jenkins Integration
+
+إنجاز التكامل مع Jenkins.
+
+### المرحلة العاشرة: Semaphore Integration
+
+تجهيز جميع الموارد المطلوبة داخل Semaphore UI، وإنشاء Templates وربطها فعلياً بملفات Playbooks.
+
+### المرحلة الحادية عشرة: CLI & Reporting
+
+تطوير CLI والتقارير.
+
+### المرحلة الثانية عشرة: Testing & Security
+
+تنفيذ الاختبارات النهائية ومراجعة الأمان والتوثيق.
+
+في نهاية كل مرحلة:
+
+- نفّذ Syntax Checks.
+- نفّذ الاختبارات المناسبة.
+- حدّث التوثيق.
+- حدّث CHANGELOG.md.
+- سجّل الوظائف المكتملة.
+- سجّل الوظائف المتبقية.
+
+لا تنتقل إلى المرحلة التالية عند وجود أخطاء حرجة غير معالجة.
+
+---
+
+# 15. معايير القبول النهائية
+
+لا يعتبر المشروع مكتملاً إلا عند تحقق الشروط التالية:
+
+1. التثبيت بنجاح على Ubuntu Server جديد ومدعوم.
+2. إدارة localhost.
+3. إدارة خوادم بعيدة عبر SSH.
+4. إعادة استخدام Inventories.
+5. عمل الوحدات بصورة مستقلة.
+6. نجاح عمليات Docker.
+7. إدارة Odoo 17 وOdoo 19 بشكل مستقل.
+8. تنفيذ نسخ احتياطية متكاملة لقاعدة البيانات وFilestore.
+9. نجاح نسخ واستعادة PostgreSQL.
+10. التحقق من إعدادات Traefik.
+11. نشر وإعادة تشغيل مشاريع Django.
+12. تنفيذ Jenkins لعمليات النشر المعتمدة.
+13. ظهور مشروع Infrastructure Automation داخل Semaphore.
+14. ظهور Repository وInventories وEnvironment وKey Store حسب إعدادات Semaphore.
+15. ظهور جميع Templates المنفذة داخل Semaphore UI.
+16. إمكانية تشغيل Templates من الواجهة.
+17. ظهور نتائج العمليات داخل Task History.
+18. عمل Scheduled Tasks.
+19. حماية البيانات الحساسة.
+20. طلب موافقة للعمليات التدميرية.
+21. إصدار تقارير منظمة.
+22. اكتمال التوثيق.
+23. نجاح الاختبارات على بيئة Ubuntu نظيفة.
+
+**المعيار الأهم:** لا تعتبر تكامل Semaphore مكتملاً لمجرد أن Semaphore يستطيع الاتصال بالمستودع. يجب أن تظهر Templates الفعلية داخل واجهته وأن تكون قابلة للتنفيذ بنجاح.
+
+---
+
+# 16. المخرجات النهائية المطلوبة
+
+يجب تسليم:
+
+1. مستودع مطور بالكامل.
+2. Ansible Roles منظمة.
+3. Playbooks قابلة لإعادة الاستخدام.
+4. Inventory Templates.
+5. Installation Scripts.
+6. CLI احترافي.
+7. تكامل Semaphore.
+8. إعداد Templates داخل Semaphore.
+9. تكامل Jenkins.
+10. نظام Backup & Restore.
+11. نظام Monitoring & Health Checks.
+12. توثيق الأمان.
+13. Test Suite.
+14. Installation Documentation.
+15. CHANGELOG.
+16. Semaphore Templates Catalog.
+17. Implementation Plan.
+18. Final Implementation Report.
+
+أنشئ:
+
+`docs/FINAL_IMPLEMENTATION_REPORT.md`
+
+ويجب أن يوضح التقرير حالة كل وظيفة:
+
+- Implemented.
+- Tested Successfully.
+- Partially Implemented.
+- Not Implemented.
+- Requires Manual Configuration.
+- Requires External Credentials.
+- Requires Production Validation.
+
+ويجب أن يتضمن قسم Semaphore:
+
+- عدد Templates التي تم تجهيزها.
+- عدد Templates التي تم ربطها.
+- عدد Templates التي ظهرت في الواجهة.
+- عدد Templates التي تم اختبارها بنجاح.
+- Templates التي تحتاج إعداداً يدوياً.
+- العمليات التي لم تكتمل.
+
+---
+
+# التعليمات النهائية
+
+طوّر منتجاً حقيقياً لإدارة البنية التحتية، وليس مجرد مجموعة Playbooks تجريبية.
+
+يجب أن يكون المشروع:
+
+- قابلاً للتثبيت على خوادم Ubuntu مختلفة.
+- قابلاً للصيانة والتطوير.
+- آمناً.
+- معيارياً.
+- قابلاً لإعادة الاستخدام.
+- متكاملاً مع Semaphore UI.
+- قابلاً للتوسع مستقبلاً مع Django Infrastructure Manager.
+
+اجعل Semaphore UI واجهة التنفيذ والتحكم الرئيسية لعمليات Ansible.
+
+عند الدخول إلى Semaphore يجب أن يتمكن المسؤول من اختيار مجموعة الإدارة، ثم اختيار العملية المطلوبة، وتحديد Inventory والخادم، وإدخال المتغيرات المطلوبة، وتشغيل المهمة ومتابعة نتيجتها.
+
+لا تكتفِ بإنشاء ملفات Playbooks؛ أنشئ أيضاً الربط والتوثيق والإعدادات اللازمة حتى تظهر العمليات داخل Semaphore UI.
+
+حافظ على الوظائف الحالية التي تعمل.
+
+لا تختلق نتائج اختبارات ناجحة.
+
+لا تستخدم إعدادات ثابتة خاصة بجهاز التطوير.
+
+لا تنفّذ عمليات تدميرية على خادم التطوير.
+
+ابدأ بمراجعة المستودع، ثم ضع خطة التنفيذ، وبعدها نفّذ التطوير على مراحل مع اختبار كل مرحلة.
+
+**الأولوية القصوى: أن يكون Semaphore UI واجهة فعلية لإدارة وتشغيل ومتابعة جميع وحدات البنية التحتية، مع المحافظة على قابلية نقل المشروع إلى أي خادم Ubuntu آخر.**

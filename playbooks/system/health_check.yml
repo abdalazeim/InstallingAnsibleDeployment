@@ -1,0 +1,14 @@
+---
+- name: Ubuntu health check
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: OS
+      ansible.builtin.debug:
+        msg: "{{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_architecture }})"
+    - name: Memory
+      ansible.builtin.debug:
+        msg: "RAM total {{ ansible_memtotal_mb }} MB"
+    - name: Load
+      ansible.builtin.debug:
+        msg: "loadavg {{ ansible_loadavg }}"
