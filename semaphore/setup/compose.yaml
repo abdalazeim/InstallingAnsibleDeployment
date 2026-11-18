@@ -1,0 +1,23 @@
+services:
+  semaphore:
+    image: semaphoreui/semaphore:v2.19.12
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SEMAPHORE_PORT:-3000}:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: sqlite
+      SEMAPHORE_DB_PATH: /var/lib/semaphore
+      SEMAPHORE_ADMIN: ${SEMAPHORE_ADMIN:-admin}
+      SEMAPHORE_ADMIN_NAME: Infrastructure Administrator
+      SEMAPHORE_ADMIN_EMAIL: ${SEMAPHORE_ADMIN_EMAIL:?Set admin email}
+      SEMAPHORE_ADMIN_PASSWORD: ${SEMAPHORE_ADMIN_PASSWORD:?Set admin password}
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION:?Set encryption key}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - semaphore-data:/var/lib/semaphore
+      - ${INFRASTRUCTURE_PROJECT:?Set absolute project path}:/workspace:ro
+      - ${SEMAPHORE_KNOWN_HOSTS:?Set trusted known_hosts path}:/etc/ssh/ssh_known_hosts:ro
+      - ${INFRASTRUCTURE_REPORTS:?Set writable reports path}:/reports
+    # Docker socket is intentionally not mounted. Targets are accessed through SSH.
+volumes:
+  semaphore-data:
