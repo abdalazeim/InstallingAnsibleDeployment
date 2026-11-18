@@ -1,0 +1,25 @@
+---
+- name: Infrastructure Server Information
+  hosts: local
+  gather_facts: true
+
+  tasks:
+    - name: Display hostname
+      debug:
+        var: ansible_hostname
+
+    - name: Display operating system
+      debug:
+        var: ansible_distribution
+
+    - name: Display OS version
+      debug:
+        var: ansible_distribution_version
+
+    - name: Display CPU architecture
+      debug:
+        var: ansible_architecture
+
+    - name: Display memory
+      debug:
+        var: ansible_memtotal_mb
