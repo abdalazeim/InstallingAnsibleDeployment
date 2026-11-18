@@ -1,0 +1,10 @@
+---
+- name: Traefik health check
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Traefik API
+      ansible.builtin.uri:
+        url: "http://localhost:8080/api/overview"
+        status_code: [200, 404]
+      ignore_errors: true

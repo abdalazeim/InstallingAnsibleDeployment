@@ -1,0 +1,12 @@
+---
+- name: Docker health check
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Docker version
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+    - name: Docker info
+      ansible.builtin.debug:
+        var: docker_version.stdout

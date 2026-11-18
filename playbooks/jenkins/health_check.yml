@@ -1,0 +1,10 @@
+---
+- name: Jenkins health check
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Jenkins
+      ansible.builtin.uri:
+        url: "http://localhost:8081/login"
+        status_code: [200, 403]
+      ignore_errors: true

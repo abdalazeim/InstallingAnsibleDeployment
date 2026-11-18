@@ -1,0 +1,13 @@
+---
+- name: PostgreSQL health check
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: pg version
+      ansible.builtin.command: psql --version
+      register: pg
+      changed_when: false
+      ignore_errors: true
+    - name: Show
+      ansible.builtin.debug:
+        var: pg.stdout

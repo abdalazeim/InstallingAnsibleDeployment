@@ -1,0 +1,10 @@
+---
+- name: Django health check
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: ITPurchasing
+      ansible.builtin.uri:
+        url: "http://localhost:8001/"
+        status_code: 200
+      ignore_errors: true

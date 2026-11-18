@@ -1,0 +1,16 @@
+---
+- name: Odoo health check
+  hosts: all
+  gather_facts: false
+  vars:
+    odoo_instance: odoo19
+  tasks:
+    - name: Curl Odoo
+      ansible.builtin.uri:
+        url: "http://localhost:10019/web/database/selector"
+        status_code: 200
+      register: odoo_http
+      ignore_errors: true
+    - name: Show
+      ansible.builtin.debug:
+        var: odoo_http.status
