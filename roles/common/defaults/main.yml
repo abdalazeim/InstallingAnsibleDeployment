@@ -1,0 +1,12 @@
+---
+infrastructure_environment: build
+confirm_operation: false
+confirm_production: false
+confirm_destructive_operation: false
+confirm_reboot: false
+infrastructure_report_dir: '{{ playbook_dir }}/../../reports'
+odoo_instances: {}
+postgres_instances: {}
+django_applications: {}
+backup_root: /var/backups/infrastructure
+retention_days: 7

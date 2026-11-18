@@ -1,0 +1,171 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    - deployment_version is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application in django_applications
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select Django application
+  ansible.builtin.set_fact:
+    app: '{{ django_applications[django_application] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') in ['native','compose']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') == 'native'
+    - deployment_version is match('^[A-Za-z0-9][A-Za-z0-9_.-]{0,80}$')
+    - app.directory is match('^/(srv|opt)/[A-Za-z0-9_/-]+$')
+    - app.user is match('^[a-z_][a-z0-9_-]*$')
+    - app.repository is match('^(https://|ssh://)')
+    - app.environment is mapping
+    - app.environment.SECRET_KEY is defined
+    - app.wsgi is defined
+    - app.health_url is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Install Python runtime prerequisites
+  ansible.builtin.apt:
+    name:
+    - python3-venv
+    - python3-pip
+    - git
+    state: present
+- name: Create application account before directories
+  ansible.builtin.user:
+    name: '{{ app.user }}'
+    system: true
+    create_home: true
+    shell: /usr/sbin/nologin
+- name: Create release directory
+  ansible.builtin.file:
+    path: '{{ app.directory }}/releases/{{ deployment_version }}'
+    state: directory
+    owner: '{{ app.user }}'
+    group: '{{ app.user }}'
+    mode: '0750'
+- name: Read existing release link
+  ansible.builtin.stat:
+    path: '{{ app.directory }}/current'
+    follow: false
+  register: previous_release
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - not previous_release.stat.exists or previous_release.stat.islnk | default(false)
+    fail_msg: Current path must be a managed symlink
+    quiet: true
+- name: Checkout requested revision
+  ansible.builtin.git:
+    repo: '{{ app.repository }}'
+    version: '{{ git_revision | default(app.revision) }}'
+    dest: '{{ app.directory }}/releases/{{ deployment_version }}/source'
+    force: false
+    accept_hostkey: false
+  become_user: '{{ app.user }}'
+- name: Install dependencies into release virtual environment
+  ansible.builtin.pip:
+    requirements: '{{ app.directory }}/releases/{{ deployment_version }}/source/requirements.txt'
+    virtualenv: '{{ app.directory }}/releases/{{ deployment_version }}/venv'
+    virtualenv_command: python3 -m venv
+  become_user: '{{ app.user }}'
+- name: Check Django configuration
+  ansible.builtin.command:
+    argv:
+    - '{{ app.directory }}/releases/{{ deployment_version }}/venv/bin/python'
+    - manage.py
+    - check
+  changed_when: false
+  no_log: true
+  args:
+    chdir: '{{ app.directory }}/releases/{{ deployment_version }}/source'
+  environment: '{{ app.environment }}'
+  become_user: '{{ app.user }}'
+- name: Collect release static files
+  ansible.builtin.command:
+    argv:
+    - '{{ app.directory }}/releases/{{ deployment_version }}/venv/bin/python'
+    - manage.py
+    - collectstatic
+    - --noinput
+  changed_when: true
+  no_log: true
+  args:
+    chdir: '{{ app.directory }}/releases/{{ deployment_version }}/source'
+  environment: '{{ app.environment }}'
+  become_user: '{{ app.user }}'
+- name: Install protected environment file
+  ansible.builtin.template:
+    src: environment.j2
+    dest: '{{ app.directory }}/environment'
+    owner: root
+    group: '{{ app.user }}'
+    mode: '0640'
+    backup: true
+  no_log: true
+- name: Install application service
+  ansible.builtin.template:
+    src: gunicorn.service.j2
+    dest: /etc/systemd/system/{{ app.service }}
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  notify: Reload systemd
+- name: Activate and health-test new application release
+  block:
+  - name: Switch current release
+    ansible.builtin.file:
+      src: '{{ app.directory }}/releases/{{ deployment_version }}'
+      dest: '{{ app.directory }}/current'
+      state: link
+      owner: '{{ app.user }}'
+      group: '{{ app.user }}'
+  - name: Reload installed unit
+    ansible.builtin.meta: flush_handlers
+  - name: Start new release
+    ansible.builtin.systemd_service:
+      name: '{{ app.service }}'
+      state: restarted
+      enabled: true
+  - name: Verify deployment health
+    ansible.builtin.uri:
+      url: '{{ app.health_url }}'
+      status_code: 200
+      validate_certs: true
+    register: app_health
+    retries: 6
+    delay: 5
+    until: app_health.status == 200
+    when: not ansible_check_mode
+  rescue:
+  - name: Restore previous release link
+    ansible.builtin.file:
+      src: '{{ previous_release.stat.lnk_source }}'
+      dest: '{{ app.directory }}/current'
+      state: link
+      force: true
+    when: previous_release.stat.islnk | default(false)
+  - name: Restart previous application release
+    ansible.builtin.systemd_service:
+      name: '{{ app.service }}'
+      state: restarted
+    when: previous_release.stat.islnk | default(false)
+  - name: Report failed deployment after rollback attempt
+    ansible.builtin.fail:
+      msg: Deployment failed. Previous code restored when available. No automatic database rollback was attempted.
+- name: Explain migrations boundary
+  ansible.builtin.debug:
+    msg: Code deployed. Database migrations are a separate approved template requiring a verified backup.

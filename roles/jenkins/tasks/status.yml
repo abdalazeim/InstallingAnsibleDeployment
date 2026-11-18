@@ -1,0 +1,30 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_url is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - jenkins_url is match('^https://') or jenkins_allow_local_http | default(false) | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Query Jenkins API
+  ansible.builtin.uri:
+    url: '{{ jenkins_url }}/api/json'
+    url_username: '{{ jenkins_user }}'
+    url_password: '{{ jenkins_api_token }}'
+    force_basic_auth: true
+    status_code: 200
+    return_content: true
+    validate_certs: true
+  register: jenkins_result
+  no_log: true
+  check_mode: false
+- name: Display Jenkins summary
+  ansible.builtin.debug:
+    msg:
+      status: '{{ jenkins_result.status }}'
+      jobs: '{{ jenkins_result.json.jobs | default([]) | map(attribute=''name'') | list }}'

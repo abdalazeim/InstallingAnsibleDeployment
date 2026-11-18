@@ -1,0 +1,18 @@
+---
+- name: Django - Update Application
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: django.update
+    operation_risk: change
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Django - Update Application
+    ansible.builtin.include_role:
+      name: django
+      tasks_from: update

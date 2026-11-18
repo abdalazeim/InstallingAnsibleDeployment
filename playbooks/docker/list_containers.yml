@@ -1,0 +1,18 @@
+---
+- name: Docker - List Containers
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: docker.list_containers
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Docker - List Containers
+    ansible.builtin.include_role:
+      name: docker
+      tasks_from: list_containers

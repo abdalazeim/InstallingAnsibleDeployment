@@ -1,0 +1,18 @@
+---
+- name: Backup - List Backups
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: backup.list
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Backup - List Backups
+    ansible.builtin.include_role:
+      name: backup
+      tasks_from: list

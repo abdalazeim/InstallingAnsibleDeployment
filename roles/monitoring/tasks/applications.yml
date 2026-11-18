@@ -1,0 +1,11 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Run selected monitoring operation
+  ansible.builtin.include_role:
+    name: django
+    tasks_from: health_check

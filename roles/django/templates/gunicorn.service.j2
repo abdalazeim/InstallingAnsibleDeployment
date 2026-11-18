@@ -1,0 +1,18 @@
+[Unit]
+Description=Managed Django application {{ django_application }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User={{ app.user }}
+Group={{ app.user }}
+WorkingDirectory={{ app.directory }}/current/source
+EnvironmentFile={{ app.directory }}/environment
+ExecStart={{ app.directory }}/current/venv/bin/gunicorn --bind 127.0.0.1:{{ app.port }} --workers {{ app.workers | default(2) }} {{ app.wsgi }}
+Restart=on-failure
+PrivateTmp=true
+NoNewPrivileges=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

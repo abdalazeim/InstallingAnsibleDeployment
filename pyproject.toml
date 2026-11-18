@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infrastructure-manager"
+version = "0.2.0"
+description = "Ubuntu infrastructure operations and Semaphore provisioning"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "PyYAML>=6,<7", "Jinja2>=3.1,<4"]
+
+[project.scripts]
+infrastructure-manager = "infrastructure_manager.cli:main"
+infrastructure-semaphore = "infrastructure_manager.semaphore:main"
+
+[tool.setuptools.packages.find]
+include = ["infrastructure_manager*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "library"]

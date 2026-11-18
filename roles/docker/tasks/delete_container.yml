@@ -1,0 +1,17 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - container_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - container_name is match('^[a-zA-Z0-9][a-zA-Z0-9_.-]*$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Change selected container state
+  community.docker.docker_container:
+    name: '{{ container_name }}'
+    state: absent

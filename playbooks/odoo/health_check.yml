@@ -1,16 +1,18 @@
 ---
-- name: Odoo health check
-  hosts: all
-  gather_facts: false
+- name: Odoo - Health Check
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
   vars:
-    odoo_instance: odoo19
+    operation_id: odoo.health_check
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
   tasks:
-    - name: Curl Odoo
-      ansible.builtin.uri:
-        url: "http://localhost:10019/web/database/selector"
-        status_code: 200
-      register: odoo_http
-      ignore_errors: true
-    - name: Show
-      ansible.builtin.debug:
-        var: odoo_http.status
+  - name: Odoo - Health Check
+    ansible.builtin.include_role:
+      name: odoo
+      tasks_from: health_check

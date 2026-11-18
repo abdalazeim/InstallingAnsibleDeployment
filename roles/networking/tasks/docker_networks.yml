@@ -1,0 +1,23 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - network_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - network_name is match('^[A-Za-z0-9][A-Za-z0-9_.-]*$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Inspect selected Docker network
+  community.docker.docker_network_info:
+    name: '{{ network_name }}'
+  register: network_result
+- name: Display network summary
+  ansible.builtin.debug:
+    msg:
+      exists: '{{ network_result.exists }}'
+      network: '{{ network_result.network.Name | default("") }}'
+      driver: '{{ network_result.network.Driver | default("") }}'

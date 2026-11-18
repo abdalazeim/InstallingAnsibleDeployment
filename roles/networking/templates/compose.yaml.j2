@@ -1,0 +1,29 @@
+services:
+  traefik:
+    image: traefik:{{ traefik_version }}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./acme.json:/acme.json
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+{% if traefik_external_networks | default([]) %}
+    networks:
+{% for network in traefik_external_networks %}
+      - {{ network }}
+{% endfor %}
+networks:
+{% for network in traefik_external_networks %}
+  {{ network }}:
+    external: true
+{% endfor %}
+{% endif %}

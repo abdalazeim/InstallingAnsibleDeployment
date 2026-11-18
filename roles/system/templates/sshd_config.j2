@@ -1,0 +1,9 @@
+# Managed after explicit access verification. Original saved by Ansible backup.
+Port {{ ssh_port | default(22) }}
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication {{ 'yes' if ssh_password_authentication | default(false) | bool else 'no' }}
+KbdInteractiveAuthentication no
+UsePAM yes
+X11Forwarding no
+Subsystem sftp internal-sftp

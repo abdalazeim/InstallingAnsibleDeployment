@@ -1,0 +1,4 @@
+http:
+  routers: {{ traefik_routes | to_json }}
+  services: {{ traefik_services | to_json }}
+  middlewares: {{ traefik_middlewares | default({}) | to_json }}

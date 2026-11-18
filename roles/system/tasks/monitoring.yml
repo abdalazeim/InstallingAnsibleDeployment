@@ -1,0 +1,29 @@
+---
+- name: Read resource usage
+  ansible.builtin.command:
+    argv:
+    - vmstat
+    - '1'
+    - '2'
+  changed_when: false
+  no_log: false
+  register: resource_sample
+  check_mode: false
+- name: Read filesystem and inode usage
+  ansible.builtin.command:
+    argv:
+    - df
+    - -P
+    - -i
+  changed_when: false
+  no_log: false
+  register: inode_sample
+  check_mode: false
+- name: Display resource report
+  ansible.builtin.debug:
+    msg:
+      memory_mb: '{{ ansible_facts.memory_mb }}'
+      load: '{{ ansible_facts.loadavg }}'
+      mounts: '{{ ansible_facts.mounts }}'
+      vmstat: '{{ resource_sample.stdout_lines }}'
+      inodes: '{{ inode_sample.stdout_lines }}'

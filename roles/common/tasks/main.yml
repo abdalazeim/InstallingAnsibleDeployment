@@ -1,0 +1,24 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_version'] in ['22.04', '24.04']
+    fail_msg: Supported target is Ubuntu 22.04/24.04; validate additional releases before enabling them
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - infrastructure_environment in ['build','dev','staging','prod']
+    - operation_risk == 'read' or confirm_operation | bool
+    - operation_risk != 'destructive' or confirm_destructive_operation | bool
+    - operation_risk == 'read' or infrastructure_environment != 'prod' or confirm_production | bool
+    fail_msg: 'Operation blocked: provide explicit confirmation and production/destructive confirmation when applicable'
+    quiet: true
+- name: Validate target transport for changes
+  ansible.builtin.assert:
+    that:
+    - not (ansible_facts.get('virtualization_type', '') in ['docker','container','podman'] and (ansible_connection
+      | default('ssh')) == 'local')
+    fail_msg: Mutation of a local runner container is refused; use the Ubuntu host SSH inventory
+  when: operation_risk != 'read'

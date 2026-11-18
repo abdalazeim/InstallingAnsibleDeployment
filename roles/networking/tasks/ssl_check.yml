@@ -1,0 +1,12 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - tls_hostname is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Verify TLS chain, hostname and expiry
+  infrastructure_tls:
+    host: '{{ tls_hostname }}'
+    port: '{{ tls_port | default(443) }}'
+    minimum_days: '{{ tls_minimum_days | default(14) }}'

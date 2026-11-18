@@ -1,0 +1,34 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application in django_applications
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select Django application
+  ansible.builtin.set_fact:
+    app: '{{ django_applications[django_application] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') in ['native','compose']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Back up application PostgreSQL database
+  infrastructure_postgres:
+    action: backup
+    connection: '{{ postgres_instances[app.postgres_instance] }}'
+    database: '{{ app.database }}'
+    backup_root: '{{ backup_root }}/django/{{ django_application }}/database'
+  no_log: true
+  register: app_backup
+- name: Display backup identifier
+  ansible.builtin.debug:
+    msg: '{{ app_backup.backup | default({}) }}'

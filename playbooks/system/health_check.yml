@@ -1,14 +1,18 @@
 ---
-- name: Ubuntu health check
-  hosts: all
+- name: System - Health Check
+  hosts: '{{ target_hosts | default("all") }}'
   gather_facts: true
+  become: false
+  any_errors_fatal: true
+  vars:
+    operation_id: system.health_check
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
   tasks:
-    - name: OS
-      ansible.builtin.debug:
-        msg: "{{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_architecture }})"
-    - name: Memory
-      ansible.builtin.debug:
-        msg: "RAM total {{ ansible_memtotal_mb }} MB"
-    - name: Load
-      ansible.builtin.debug:
-        msg: "loadavg {{ ansible_loadavg }}"
+  - name: System - Health Check
+    ansible.builtin.include_role:
+      name: system
+      tasks_from: health_check

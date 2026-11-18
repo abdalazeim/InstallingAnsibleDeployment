@@ -1,0 +1,22 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - network_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - network_name is match('^[a-zA-Z0-9][a-zA-Z0-9_.-]*$')
+    - network_state | default('present') in ['present','absent']
+    - network_state | default('present') != 'absent' or confirm_destructive_operation | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Manage selected network without force removal
+  community.docker.docker_network:
+    name: '{{ network_name }}'
+    state: '{{ network_state | default(''present'') }}'
+    force: false
+    connected: '{{ network_containers | default(omit) }}'
+    appends: '{{ network_append | default(true) | bool }}'

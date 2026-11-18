@@ -1,0 +1,61 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    - allow_sensitive_logs is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - allow_sensitive_logs | default(false) | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Read bounded Odoo Docker logs
+  ansible.builtin.command:
+    argv:
+    - docker
+    - logs
+    - --tail
+    - '100'
+    - '{{ odoo.container }}'
+  changed_when: false
+  no_log: true
+  when: odoo.mode == 'docker'
+  register: odoo_docker_logs
+  check_mode: false
+- name: Read bounded Odoo native logs
+  ansible.builtin.command:
+    argv:
+    - journalctl
+    - --no-pager
+    - -n
+    - '100'
+    - -u
+    - '{{ odoo.service }}'
+  changed_when: false
+  no_log: true
+  when: odoo.mode == 'native'
+  register: odoo_native_logs
+  check_mode: false
+- name: Display explicitly requested logs
+  ansible.builtin.debug:
+    msg: '{{ odoo_docker_logs.stdout | default(odoo_native_logs.stdout | default('''')) }}'

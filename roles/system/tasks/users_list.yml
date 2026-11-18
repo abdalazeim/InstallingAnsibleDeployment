@@ -1,0 +1,7 @@
+---
+- name: Read public account database
+  ansible.builtin.getent:
+    database: passwd
+- name: Display account names
+  ansible.builtin.debug:
+    msg: '{{ ansible_facts.getent_passwd.keys() | list }}'

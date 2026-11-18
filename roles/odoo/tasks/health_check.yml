@@ -1,0 +1,53 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Check Odoo HTTP
+  ansible.builtin.uri:
+    url: '{{ odoo.health_url }}'
+    status_code:
+    - 200
+    - 303
+    return_content: false
+    validate_certs: true
+    timeout: 30
+  check_mode: false
+- name: Check Odoo database
+  infrastructure_postgres:
+    action: health
+    connection: '{{ postgres_instances[odoo.postgres_instance] }}'
+  no_log: true
+- name: Check optional WebSocket port
+  ansible.builtin.wait_for:
+    host: '{{ odoo.websocket_host | default(''127.0.0.1'') }}'
+    port: '{{ odoo.websocket_port }}'
+    timeout: 10
+  when: odoo.websocket_port is defined
+  check_mode: false
+- name: Report Odoo checks
+  ansible.builtin.debug:
+    msg:
+      instance: '{{ odoo_instance }}'
+      http: passed
+      database: passed
+      websocket: TCP only; protocol validation needs endpoint-specific testing

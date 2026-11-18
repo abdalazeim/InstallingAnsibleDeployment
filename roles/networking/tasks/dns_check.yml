@@ -1,0 +1,14 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - dns_name is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Resolve hostname using target resolver
+  ansible.builtin.getent:
+    database: ahosts
+    key: '{{ dns_name }}'
+- name: Display DNS result
+  ansible.builtin.debug:
+    var: ansible_facts.getent_ahosts

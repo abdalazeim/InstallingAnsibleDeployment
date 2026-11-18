@@ -1,0 +1,35 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Manage Odoo Docker service
+  community.docker.docker_container:
+    name: '{{ odoo.container }}'
+    state: started
+    restart: true
+  when: odoo.mode == 'docker'
+- name: Manage Odoo native service
+  ansible.builtin.service:
+    name: '{{ odoo.service }}'
+    state: restarted
+  when: odoo.mode == 'native'

@@ -1,12 +1,18 @@
 ---
-- name: Docker health check
-  hosts: all
-  gather_facts: false
+- name: Docker - Health Check
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: docker.health_check
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
   tasks:
-    - name: Docker version
-      ansible.builtin.command: docker --version
-      register: docker_version
-      changed_when: false
-    - name: Docker info
-      ansible.builtin.debug:
-        var: docker_version.stdout
+  - name: Docker - Health Check
+    ansible.builtin.include_role:
+      name: docker
+      tasks_from: health_check

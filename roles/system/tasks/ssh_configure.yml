@@ -1,0 +1,34 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - ssh_access_verified is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - ssh_access_verified | default(false) | bool
+    - ssh_public_key_authentication | default(true) | bool
+    - ssh_port | default(22) | int > 0
+    - ssh_port | default(22) | int < 65536
+    - ssh_port | default(22) | int == ansible_port | default(22) | int or ssh_new_port_allowed | default(false)
+      | bool
+    fail_msg: Verify a second SSH key session and permit the new port before applying SSH changes
+    quiet: true
+- name: Install OpenSSH
+  ansible.builtin.apt:
+    name: openssh-server
+    state: present
+- name: Install validated SSH configuration with backup
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+    backup: true
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload SSH
+- name: Apply SSH reload after validation
+  ansible.builtin.meta: flush_handlers

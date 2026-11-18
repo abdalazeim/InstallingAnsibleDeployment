@@ -1,0 +1,48 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - django_application in django_applications
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select Django application
+  ansible.builtin.set_fact:
+    app: '{{ django_applications[django_application] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') in ['native','compose']
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - app.mode | default('native') == 'native'
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - deployment_backup_verified | default(false) | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Run Django management operation
+  ansible.builtin.command:
+    argv:
+    - '{{ app.directory }}/current/venv/bin/python'
+    - manage.py
+    - migrate
+    - --noinput
+  changed_when: true
+  no_log: true
+  become_user: '{{ app.user }}'
+  args:
+    chdir: '{{ app.directory }}/current/source'
+  environment: '{{ app.environment }}'

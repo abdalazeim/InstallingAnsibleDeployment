@@ -1,0 +1,18 @@
+---
+- name: Django - Restart Gunicorn
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: django.restart_gunicorn
+    operation_risk: change
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Django - Restart Gunicorn
+    ansible.builtin.include_role:
+      name: django
+      tasks_from: restart_gunicorn

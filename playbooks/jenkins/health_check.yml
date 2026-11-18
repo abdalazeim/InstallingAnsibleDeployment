@@ -1,10 +1,18 @@
 ---
-- name: Jenkins health check
-  hosts: all
-  gather_facts: false
+- name: Jenkins - Health Check
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: false
+  any_errors_fatal: true
+  vars:
+    operation_id: jenkins.health_check
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
   tasks:
-    - name: Jenkins
-      ansible.builtin.uri:
-        url: "http://localhost:8081/login"
-        status_code: [200, 403]
-      ignore_errors: true
+  - name: Jenkins - Health Check
+    ansible.builtin.include_role:
+      name: jenkins
+      tasks_from: health_check

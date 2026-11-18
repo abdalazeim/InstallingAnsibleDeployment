@@ -1,0 +1,13 @@
+---
+- name: Validate and show effective SSH configuration
+  ansible.builtin.command:
+    argv:
+    - /usr/sbin/sshd
+    - -T
+  changed_when: false
+  no_log: false
+  register: ssh_status
+  check_mode: false
+- name: Show effective SSH configuration
+  ansible.builtin.debug:
+    var: ssh_status.stdout_lines

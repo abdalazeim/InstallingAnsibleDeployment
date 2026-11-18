@@ -1,0 +1,18 @@
+---
+- name: Networking - Connectivity Check
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: false
+  any_errors_fatal: true
+  vars:
+    operation_id: networking.connectivity
+    operation_risk: read
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Networking - Connectivity Check
+    ansible.builtin.include_role:
+      name: networking
+      tasks_from: connectivity

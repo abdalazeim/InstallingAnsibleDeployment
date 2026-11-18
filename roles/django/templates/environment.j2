@@ -1,0 +1,3 @@
+{% for key, value in app.environment | dictsort %}
+{{ key }}={{ value | string | to_json }}
+{% endfor %}

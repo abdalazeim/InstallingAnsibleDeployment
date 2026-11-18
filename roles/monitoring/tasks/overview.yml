@@ -1,0 +1,5 @@
+---
+- name: Run selected monitoring operation
+  ansible.builtin.include_role:
+    name: system
+    tasks_from: info

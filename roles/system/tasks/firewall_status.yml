@@ -1,0 +1,14 @@
+---
+- name: Read firewall status
+  ansible.builtin.command:
+    argv:
+    - ufw
+    - status
+    - verbose
+  changed_when: false
+  no_log: false
+  register: firewall_status
+  check_mode: false
+- name: Display firewall status
+  ansible.builtin.debug:
+    var: firewall_status.stdout_lines

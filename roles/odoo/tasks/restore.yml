@@ -1,0 +1,74 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance is defined
+    - bundle_id is defined
+    - restore_database is defined
+    - restore_destination is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo_instance in odoo_instances
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Select isolated Odoo instance
+  ansible.builtin.set_fact:
+    odoo: '{{ odoo_instances[odoo_instance] }}'
+  no_log: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - odoo.mode in ['docker','native']
+    - odoo.database is match('^[A-Za-z_][A-Za-z0-9_-]{0,62}$')
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - bundle_id is match('^[0-9]{8}T[0-9]{6}Z-[a-f0-9]{12}$')
+    - restore_database != odoo.database
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Read paired manifest
+  ansible.builtin.slurp:
+    src: '{{ backup_root }}/odoo/{{ odoo_instance }}/bundles/{{ bundle_id }}.json'
+  register: bundle_raw
+- name: Decode paired manifest
+  ansible.builtin.set_fact:
+    bundle: '{{ bundle_raw.content | b64decode | from_json }}'
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - bundle.kind == 'odoo-bundle'
+    - bundle.instance == odoo_instance
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Verify filestore before restoring database
+  infrastructure_archive:
+    action: verify
+    backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/filestore'
+    backup_id: '{{ bundle.filestore.backup_id }}'
+- name: Restore database to a new name
+  infrastructure_postgres:
+    action: restore
+    connection: '{{ postgres_instances[odoo.postgres_instance] }}'
+    database: '{{ restore_database }}'
+    backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/database'
+    backup_id: '{{ bundle.database.backup_id }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+  no_log: true
+- name: Restore paired filestore to a new directory
+  infrastructure_archive:
+    action: restore
+    backup_root: '{{ backup_root }}/odoo/{{ odoo_instance }}/filestore'
+    backup_id: '{{ bundle.filestore.backup_id }}'
+    destination: '{{ restore_destination }}'
+    restore_root: '{{ restore_root | default(''/var/lib/infrastructure/restores'') }}'
+    confirmed: '{{ confirm_destructive_operation | bool }}'
+- name: Explain recovery cutover boundary
+  ansible.builtin.debug:
+    msg: Restored to isolated targets. Configure a recovery instance, validate HTTP/addons and filestore ownership
+      before manual cutover. Existing application remains unchanged.

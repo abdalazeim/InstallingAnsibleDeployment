@@ -1,0 +1,18 @@
+---
+- name: Docker - Unpause Container
+  hosts: '{{ target_hosts | default("all") }}'
+  gather_facts: true
+  become: true
+  any_errors_fatal: true
+  vars:
+    operation_id: docker.unpause_container
+    operation_risk: change
+  pre_tasks:
+  - name: Apply execution policy
+    ansible.builtin.import_role:
+      name: common
+  tasks:
+  - name: Docker - Unpause Container
+    ansible.builtin.include_role:
+      name: docker
+      tasks_from: unpause_container

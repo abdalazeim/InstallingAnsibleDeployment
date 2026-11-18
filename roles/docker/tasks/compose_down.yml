@@ -1,0 +1,38 @@
+---
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - compose_directory is defined
+    - compose_project is defined
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate operation inputs
+  ansible.builtin.assert:
+    that:
+    - compose_directory is match('^/[^\n]+$')
+    - compose_project is match('^[a-z0-9][a-z0-9_-]*$')
+    - infrastructure_environment != 'prod' or deployment_backup_verified | default(false) | bool
+    fail_msg: Invalid or incomplete operation inputs
+    quiet: true
+- name: Validate Compose configuration
+  ansible.builtin.command:
+    argv:
+    - docker
+    - compose
+    - --project-directory
+    - '{{ compose_directory }}'
+    - --project-name
+    - '{{ compose_project }}'
+    - config
+    - --quiet
+  changed_when: false
+  no_log: false
+  check_mode: false
+- name: Apply Compose operation
+  community.docker.docker_compose_v2:
+    project_src: '{{ compose_directory }}'
+    project_name: '{{ compose_project }}'
+    state: absent
+    pull: policy
+    remove_volumes: false
+    services: '{{ compose_services | default(omit) }}'
