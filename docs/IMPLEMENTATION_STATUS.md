@@ -29,17 +29,18 @@ with root.
 | Report callback | read-only `playbooks/system/info.yml` writes aggregate stats JSON |
 | Static modules | PostgreSQL, archive, addons and TLS modules with unit tests |
 | Installation | `install.sh`, preflight, verify, uninstall; not executed here (no sudo) |
-| Semaphore | Compose pinned to 2.19.12, API provisioner, 392 planned templates, generated catalog, setup/security docs |
+| Semaphore | Compose pinned to 2.19.12, API provisioner, 392 planned and provisioned templates, generated catalog, setup/security docs |
+| Live Semaphore UI | Project 1 `Infrastructure Automation` on port 3002: 392 templates, 4 inventories, 4 variable groups, 3 keys, 10 views, 8 history rows; 6 successful read-only tasks and browser read-back of history and templates |
 | Jenkins | 5 pipelines and a shared-library step; delivered as code, not executed here |
 | Documentation | architecture, installation, configuration, operations, security, troubleshooting, development, 9 module docs, final report |
 
 ## Not verified
 
 - Clean Ubuntu 22.04/24.04 installation and an idempotent re-run.
-- Live Semaphore project/template creation, UI visibility, key store, task
-  history and schedules (`browser_ui_observed: false`).
-- Docker, Odoo, PostgreSQL, Traefik, Jenkins and Django operations on real
-  hosts.
+- Enabled schedules, mutating/destructive templates, backup/restore and the
+  Jenkins shared library in a live deployment.
+- Docker, Odoo, PostgreSQL, Traefik and Jenkins operations beyond the local
+  read-only checks recorded in `FINAL_IMPLEMENTATION_REPORT.md`.
 - Backup/restore drill against real data.
 - Jenkins pipeline execution and shared-library resolution in a real Jenkins.
 - Integration and idempotency suites (need `INFRASTRUCTURE_INTEGRATION=1` on a

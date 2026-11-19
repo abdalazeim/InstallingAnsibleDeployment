@@ -77,8 +77,10 @@ idempotency suites; they are **not** counted as passes.
 | Container-localhost limitation | **documented, not fixed** | inside containerized Semaphore, `localhost` is the runner container; mutating operations require an SSH inventory |
 
 The provisioner report deliberately keeps
-`templates_executed_successfully: 0` and `browser_ui_observed: false` until a
-real deployment is checked. Do not change those values without evidence.
+`templates_executed_successfully: 0` and `browser_ui_observed: false` because
+those fields are set only by `--smoke` and the provisioner itself. The local
+verification below records real task and UI evidence separately; do not edit
+the provisioner report values manually.
 
 ## 4. Known limitations
 
@@ -96,7 +98,53 @@ real deployment is checked. Do not change those values without evidence.
 6. Historical `legacy/` inventories contain unsafe `StrictHostKeyChecking=no`
    settings. They are excluded from every gate and must not be reused.
 
-## 5. Acceptance test for the operator
+## 5. Live Semaphore verification (local instance, 19 Nov 2026)
+
+A separate Semaphore instance was started from `semaphore/setup/` on
+`http://127.0.0.1:3002` with its own Docker project and volume. The existing
+demo instance on port 3000 was left untouched. API read-back confirmed:
+
+| Check | Observed |
+|---|---|
+| Server | `v2.19.12-012ed06-1788086369`; Ansible core 2.20.8 in the runner |
+| Project | `Infrastructure Automation` (id 1) |
+| Repositories | 1 provisioned local checkout; 1 SSH repository added for the static test inventory |
+| Inventories | 4 (`build`, `dev`, `staging`, `prod`) |
+| Variable groups | 4 |
+| Key store | 3 entries (no-credentials, SSH, None) |
+| Views | 10 (default view plus 9 operation groups) |
+| Templates | 392 (98 operations × 4 environments), all pointing to existing playbooks |
+| Schedules | 0, as configured |
+| Task history | 8 tasks: #1–#2 failed during setup, #3–#8 succeeded |
+
+Browser read-back was performed on the real UI:
+
+- `http://localhost:3002/project/1/history` showed 8 history rows, including
+  `#3 System - Information [build]`, `#4 Django - Application Status [build]`
+  and `#5 Odoo - List Instances [build]` with status **Success**.
+- `http://localhost:3002/project/1/views/1/templates` showed 392 template rows
+  and the 9 operation-group tabs.
+
+The six successful tasks ran read-only operations through the catalog templates
+against local Ubuntu 24.04, Odoo 19, Django and Docker services over SSH. Each
+play recap reported `failed=0`; aggregate reports were written to `/reports`
+with mode `0600`. The two initial failures were setup issues and were corrected:
+static inventory path resolution for a local repository, and Galaxy downloads
+from a runner without internet access. The final successful runs used the
+preinstalled collections and `skip_galaxy_install`.
+
+Local test state is not part of the supported deployment: a dedicated SSH key
+was added to `~/.ssh/authorized_keys`, a `static-yaml` inventory was temporarily
+installed in project 1 and restored afterwards, and three build templates were
+given `skip_galaxy_install: true`. The provisioner now exposes `task_environment`
+and `skip_galaxy_install` as configuration options so this does not require
+manual API edits.
+
+Still not verified: change and destructive operations, backup/restore,
+schedules with `enabled: true`, clean-host installation, Jenkins pipelines and
+remote production targets.
+
+## 6. Acceptance test for the operator
 
 Run these on a disposable Ubuntu 22.04/24.04 server, in order, and record the
 real output:
@@ -121,7 +169,7 @@ real output:
 11. Only then update this report with the real counts and remove the
     corresponding "not verified" rows.
 
-## 6. Where to look
+## 7. Where to look
 
 | Topic | File |
 |---|---|

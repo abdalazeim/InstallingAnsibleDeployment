@@ -24,7 +24,7 @@ docker compose up -d
 Generate the encryption key with a password manager or:
 
 ```bash
-openssl rand -hex 32
+openssl rand -base64 32
 ```
 
 The API is exposed on `127.0.0.1` only. Use an SSH tunnel for remote access;
@@ -35,7 +35,7 @@ do not publish port 3000 to the internet.
 The provisioner talks to the Semaphore HTTP API and is pinned to `2.19.12`.
 
 ```bash
-export SEMAPHORE_API_TOKEN='...'          # create in Semaphore UI
+export SEMAPHORE_API_TOKEN='...'          # full id from POST /api/user/tokens
 export SEMAPHORE_SSH_PRIVATE_KEY='...'    # only if config.ssh_private_key_env is set
 export SEMAPHORE_VAULT_PASSWORD='...'     # only if config.vault_password_env is set
 

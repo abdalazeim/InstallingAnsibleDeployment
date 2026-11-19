@@ -13,6 +13,11 @@ services:
       SEMAPHORE_ADMIN_PASSWORD: ${SEMAPHORE_ADMIN_PASSWORD:?Set admin password}
       SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION:?Set encryption key}
       INFRASTRUCTURE_REPORT_DIR: /reports
+      # The mounted repository is usually owned by a different UID on the host.
+      # Mark it as safe without weakening Git checks elsewhere.
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /workspace
       TZ: ${TZ:-UTC}
     volumes:
       - semaphore-data:/var/lib/semaphore

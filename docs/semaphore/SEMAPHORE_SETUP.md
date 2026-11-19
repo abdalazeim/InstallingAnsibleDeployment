@@ -60,7 +60,9 @@ Required values in `.env`:
 | `SEMAPHORE_KNOWN_HOSTS` | trusted host keys for SSH targets |
 
 Generate the encryption key with a password manager or
-`openssl rand -hex 32`. The API is published on `127.0.0.1:3000`; use an SSH
+`openssl rand -base64 32`. Semaphore 2.19.12 decodes this value and requires a
+16-, 24- or 32-byte AES key; a 32-byte base64 value satisfies that contract.
+The API is published on `127.0.0.1:3000`; use an SSH
 tunnel for remote access. Do not expose port 3000 to the internet and do not
 mount the Docker socket into Semaphore.
 
@@ -77,6 +79,25 @@ curl --fail http://127.0.0.1:3000/api/info
 2. Sign in as the administrator.
 3. Create an API token for the operator.
 4. Keep it in a password manager or CI credential store.
+
+`GET /api/user/tokens` deliberately shows only the first 8 characters of each
+token. The full value is returned **once** by `POST /api/user/tokens`. Capture
+the `id` from that response; do not reuse the truncated listing value as a
+Bearer token.
+
+```bash
+read -s -p 'Semaphore password: ' SEMAPHORE_ADMIN_PASSWORD; echo
+curl -fsS -c /tmp/semaphore-cookies -H 'Content-Type: application/json' \
+  -d "{\"auth\":\"$SEMAPHORE_ADMIN\",\"password\":\"$SEMAPHORE_ADMIN_PASSWORD\"}" \
+  http://127.0.0.1:3000/api/auth/login
+export SEMAPHORE_API_TOKEN="$(curl -fsS -b /tmp/semaphore-cookies \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"infrastructure-provisioner"}' \
+  http://127.0.0.1:3000/api/user/tokens \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')"
+rm -f /tmp/semaphore-cookies
+unset SEMAPHORE_ADMIN_PASSWORD
+```
 
 The provisioner reads it from `SEMAPHORE_API_TOKEN`. It is never written to the
 repository or to reports.
@@ -120,6 +141,18 @@ What is reconciled:
 | Views | one per operation group |
 | Templates | one per operation × environment, named `<operation> [<env>]` |
 | Schedules | only from `config.schedules`, inactive unless `--enable-schedules` |
+
+Optional config keys for restricted runners:
+
+| Key | Purpose |
+|---|---|
+| `task_environment` | extra process environment variables merged into every variable group, e.g. `ANSIBLE_COLLECTIONS_PATHS` |
+| `skip_galaxy_install` | set to `true` when the required collections are preinstalled and the runner has no Galaxy/GitHub network access |
+
+For the pinned Semaphore image, `ANSIBLE_COLLECTIONS_PATHS` can point to
+`/home/semaphore/.ansible/collections`, which already contains the versions in
+`requirements.yml`. Keep `skip_galaxy_install: false` on hosts where the
+installer manages collections through Galaxy.
 
 The JSON report is written to `reports/semaphore-provisioning.json`. It sets
 `templates_executed_successfully: 0` and `browser_ui_observed: false` until a

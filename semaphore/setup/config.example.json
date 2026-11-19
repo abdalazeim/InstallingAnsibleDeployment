@@ -5,6 +5,8 @@
   "repository_branch": "main",
   "environments": ["build", "dev", "staging", "prod"],
   "report_dir": "/reports",
+  "task_environment": {},
+  "skip_galaxy_install": false,
   "schedules": [
     {
       "name": "Development server health",

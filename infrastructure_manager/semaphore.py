@@ -110,9 +110,10 @@ class Provisioner:
         return result['id']
 
     def apply(self,enable_schedules=False):
-        version=self.client.request('GET','/info').get('version','').lstrip('v')
+        reported=self.client.request('GET','/info').get('version','')
+        version=re.sub(r'^\D*', '', reported).split('-',1)[0].split('+',1)[0]
         if version!='2.19.12':
-            raise APIError('Provisioner contract is pinned to Semaphore 2.19.12; observed '+version)
+            raise APIError('Provisioner contract is pinned to Semaphore 2.19.12; observed '+reported)
         projects=self.client.request('GET','/projects')
         name=self.config.get('project_name','Infrastructure Automation')
         matches=[p for p in projects if p['name']==name]
@@ -144,6 +145,7 @@ class Provisioner:
             if any(k.startswith('confirm_') and v for k,v in variables.items()):
                 raise ValueError('Confirmation flags cannot be enabled permanently in an environment')
             task_env={'ANSIBLE_CONFIG':'ansible.cfg'}
+            task_env.update(self.config.get('task_environment',{}))
             report_dir=self.config.get('report_dir','/reports')
             if report_dir:
                 task_env['INFRASTRUCTURE_REPORT_DIR']=report_dir
@@ -170,7 +172,8 @@ class Provisioner:
                     'environment_id':environments[env],'view_id':views[operation['group']],
                     'arguments':'[]','allow_override_args_in_task':False,'autorun':False,'type':'',
                     'description':'Managed catalog: '+operation_id+'. '+operation['risk']+' operation.',
-                    'survey_vars':surveys,'vaults':[{'name':'default','type':'password','vault_key_id':vault_id}] if vault_id else []}
+                    'survey_vars':surveys,'vaults':[{'name':'default','type':'password','vault_key_id':vault_id}] if vault_id else [],
+                    'task_params':{'skip_galaxy_install':bool(self.config.get('skip_galaxy_install',False))}}
                 templates[(env,operation_id)]=self.ensure(base+'/templates',payload)['id']
         for schedule in self.config.get('schedules',[]):
             key=(schedule['environment'],schedule['operation'])
