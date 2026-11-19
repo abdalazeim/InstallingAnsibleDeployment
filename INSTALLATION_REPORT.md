@@ -1,5 +1,7 @@
 # INSTALLATION_REPORT.md — Ansible (المرحلة 1: التثبيت والتحقق فقط)
 
+> **سجل تاريخي (2026-11-07).** هذا الملف يوثّق واجهة المرحلة 1 القديمة فقط، وليس دليلاً على حالة المنصة الحالية. للحالة الفعلية راجع [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md).
+
 **التاريخ:** 2026-11-07  
 **النطاق:** `InstallingAnsibleDeployment/` — تثبيت Ansible **Native على Ubuntu Server** + تحقق. **لا** Docker، **لا** تكامل (Jenkins/Docker/Traefik/Odoo)، **لا** Playbooks/Collections تكامل.  
 **تنظيم:** بدون حذف ملفات/مجلدات؛ النسخ الأصلية الفارغة محفوظة في `legacy/`.  

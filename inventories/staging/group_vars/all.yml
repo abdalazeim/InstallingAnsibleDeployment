@@ -1,0 +1,14 @@
+---
+# Staging environment defaults.
+# Add SSH hosts under all.children.managed.hosts in hosts.yml and define
+# instance maps in host_vars/<host>.yml. Secrets stay in Vault or the
+# Semaphore Key Store.
+infrastructure_environment: staging
+
+confirm_operation: false
+confirm_production: false
+confirm_destructive_operation: false
+confirm_reboot: false
+
+backup_root: /var/backups/infrastructure
+retention_days: 14

@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: networking
       tasks_from: dns_check
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

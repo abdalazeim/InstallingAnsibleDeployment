@@ -22,6 +22,29 @@ Scope: local checkout, before the portable Ubuntu implementation. No remote serv
 - 40 YAML documents parse; one collection example has a non-UTF-8 encoding.
 - Windows host has no Ansible, Docker or installed WSL. Ubuntu integration is deferred to a separate server per operator instruction.
 
+## Remediation applied 2026-11-18
+
+- Added `inventories/build/hosts.yml` (installation verification and optional
+  Semaphore smoke) and documented its container-localhost limitation.
+- Added `playbooks/_guard.yml` and imported it into every operation playbook so
+  an empty inventory or limit fails instead of returning a false success.
+- Wired `INFRASTRUCTURE_REPORT_DIR` through the Semaphore provisioner and
+  Compose `/reports` mount; the callback falls back to `/reports` when present.
+- Untracked `legacy/control-plane/semaphore/key-acess.txt` (kept locally,
+  ignored by Git) and added rotation instructions. Treat any previously pushed
+  value as compromised.
+- Replaced the stale Phase 1 README with the current platform documentation and
+  marked the Phase 1 guide/report/version files as historical.
+- Extended the structural validator to require the empty-target guard and the
+  build inventory.
+
+Remaining: clean-host installation/idempotency, live Semaphore provisioning and
+UI read-back, real workload and backup/restore drills, and Jenkins pipeline
+execution. Historical `StrictHostKeyChecking=no` inventories stay unsupported
+under `legacy/`. The deprecated `playbooks/networking/health_check.yml` alias is
+documented and excluded from the catalog. See
+`docs/IMPLEMENTATION_STATUS.md` and `docs/FINAL_IMPLEMENTATION_REPORT.md`.
+
 ## Remediation architecture
 Use root `playbooks/`, reusable root `roles/`, four explicit inventories, a tested operation catalog, an allowlisted Python CLI, fail-closed mutation guards, JSON statistics and a version-aware Semaphore API provisioner. Preserve historical code with a clear unsupported status; do not present it as the new supported path.
 

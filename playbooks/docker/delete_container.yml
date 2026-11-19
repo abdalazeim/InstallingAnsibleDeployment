@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: docker
       tasks_from: delete_container
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

@@ -1,0 +1,8 @@
+---
+# Root-level group variables are reserved for values shared by every
+# environment. Ansible resolves group_vars relative to the inventory and
+# playbook directories, so environment values live in
+# inventories/<environment>/group_vars/.
+#
+# Keep this directory free of secrets. Use Ansible Vault or the Semaphore Key
+# Store for credentials.

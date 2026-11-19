@@ -4,13 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "infrastructure-manager"
-version = "0.2.0"
+version = "0.3.0"
 description = "Ubuntu infrastructure operations and Semaphore provisioning"
+readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Infrastructure Automation contributors" }]
 dependencies = []
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10", "PyYAML>=6,<7", "Jinja2>=3.1,<4"]
+dev = [
+  "pytest>=8,<10",
+  "PyYAML>=6,<7",
+  "Jinja2>=3.1,<4",
+  "ansible-lint>=26,<27",
+  "ansible-core>=2.21,<2.22",
+]
 
 [project.scripts]
 infrastructure-manager = "infrastructure_manager.cli:main"
@@ -22,3 +32,10 @@ include = ["infrastructure_manager*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "library"]
+addopts = "-ra"
+markers = [
+  "syntax: playbook syntax checks",
+  "security: static security checks",
+  "integration: requires a reachable Ubuntu target",
+  "idempotency: runs an operation twice and requires no second-run changes",
+]

@@ -1,0 +1,11 @@
+{
+  "url": "https://semaphore.example.internal",
+  "project_name": "Infrastructure Automation",
+  "repository_url": "git@github.com:abdalazeim/InstallingAnsibleDeployment.git",
+  "repository_branch": "main",
+  "environments": ["build", "dev", "staging", "prod"],
+  "report_dir": "/reports",
+  "ssh_private_key_env": "SEMAPHORE_SSH_PRIVATE_KEY",
+  "vault_password_env": "SEMAPHORE_VAULT_PASSWORD",
+  "ssh_login": "ubuntu"
+}

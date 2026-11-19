@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: postgresql
       tasks_from: verify_backup
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: odoo
       tasks_from: update_modules
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

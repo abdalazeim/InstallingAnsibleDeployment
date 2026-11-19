@@ -1,0 +1,71 @@
+@Library('infrastructure') _
+
+// Triggers a backup or backup verification template through Semaphore.
+// VARIABLES_JSON is a JSON object of operation inputs, for example:
+//   Files:      {"backup_source": "/srv/data"}
+//   PostgreSQL: {"postgres_instance": "main", "database_name": "app"}
+//   Odoo:       {"odoo_instance": "odoo19", "confirm_downtime": "true"}
+//   Django:     {"django_application": "portal"}
+//   Verify:     {"backup_id": "20261118T020000Z-abc123"}
+pipeline {
+    agent any
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '100'))
+    }
+    parameters {
+        string(name: 'SEMAPHORE_URL', defaultValue: 'https://semaphore.example.internal', description: 'Semaphore base URL')
+        string(name: 'SEMAPHORE_PROJECT_ID', defaultValue: '1', description: 'Semaphore project ID')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Target environment')
+        choice(name: 'TEMPLATE', choices: [
+            'Backup - Files Backup',
+            'Backup - PostgreSQL',
+            'Backup - Odoo',
+            'Backup - Django Database',
+            'Backup - Verify'
+        ], description: 'Backup template')
+        text(name: 'VARIABLES_JSON', defaultValue: '{}', description: 'JSON object of operation inputs')
+        booleanParam(name: 'PRODUCTION_APPROVED', defaultValue: false, description: 'Required for production backups')
+    }
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    def parsed = readJSON(text: params.VARIABLES_JSON)
+                    if (!(parsed instanceof Map)) {
+                        error('VARIABLES_JSON must be a JSON object')
+                    }
+                    if (params.ENVIRONMENT == 'prod' && !params.PRODUCTION_APPROVED) {
+                        error('Set PRODUCTION_APPROVED to run a production backup job')
+                    }
+                }
+            }
+        }
+        stage('Run backup through Semaphore') {
+            steps {
+                script {
+                    def variables = readJSON(text: params.VARIABLES_JSON)
+                    if (params.TEMPLATE != 'Backup - Verify') {
+                        variables.confirm_operation = 'true'
+                        if (params.ENVIRONMENT == 'prod') {
+                            variables.confirm_production = 'true'
+                        }
+                    }
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "${params.TEMPLATE} [${params.ENVIRONMENT}]",
+                        variables: variables,
+                        message: "Jenkins ${params.TEMPLATE}",
+                        maxAttempts: 720
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success { echo 'Backup job finished; verify the report and retention separately.' }
+        failure { echo 'Backup job failed; inspect the Semaphore task history before retrying.' }
+    }
+}

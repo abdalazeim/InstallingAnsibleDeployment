@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: docker
       tasks_from: install
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

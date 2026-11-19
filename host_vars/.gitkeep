@@ -1,0 +1,6 @@
+---
+# Host-specific variables belong here, named <inventory-host>.yml.
+# The directory is ignored by Git (inventories/*/host_vars and host_vars/*.yml)
+# because instance definitions may contain environment-specific values.
+#
+# Use Ansible Vault for secrets. Never commit real credentials.

@@ -1,10 +1,5 @@
 ---
-- name: Traefik health check
-  hosts: all
-  gather_facts: false
-  tasks:
-    - name: Traefik API
-      ansible.builtin.uri:
-        url: "http://localhost:8080/api/overview"
-        status_code: [200, 404]
-      ignore_errors: true
+# Deprecated alias kept for backward compatibility with older documentation.
+# The catalog operation is `playbooks/networking/traefik_health.yml`.
+- name: Traefik health check (deprecated alias)
+  import_playbook: traefik_health.yml

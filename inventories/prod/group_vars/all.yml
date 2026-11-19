@@ -1,0 +1,13 @@
+---
+# Production environment defaults.
+# Confirmation flags must stay false here: they are supplied per task from the
+# Semaphore survey or CLI and are validated by roles/common.
+infrastructure_environment: prod
+
+confirm_operation: false
+confirm_production: false
+confirm_destructive_operation: false
+confirm_reboot: false
+
+backup_root: /var/backups/infrastructure
+retention_days: 30

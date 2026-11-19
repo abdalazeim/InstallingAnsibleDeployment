@@ -1,0 +1,80 @@
+@Library('infrastructure') _
+
+pipeline {
+    agent any
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+    }
+    parameters {
+        string(name: 'SEMAPHORE_URL', defaultValue: 'https://semaphore.example.internal', description: 'Semaphore base URL')
+        string(name: 'SEMAPHORE_PROJECT_ID', defaultValue: '1', description: 'Semaphore project ID')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Target environment')
+        string(name: 'ODOO_INSTANCE', defaultValue: 'odoo19', description: 'Instance key from odoo_instances')
+        string(name: 'ADDONS_REPOSITORY', defaultValue: '', description: 'Git repository for the addons')
+        string(name: 'ADDONS_REVISION', defaultValue: '', description: 'Branch, tag or commit')
+    }
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    if (!(params.ODOO_INSTANCE ==~ /^[a-z0-9][a-z0-9_-]{0,30}$/)) {
+                        error('ODOO_INSTANCE has an invalid format')
+                    }
+                    if (!(params.ADDONS_REPOSITORY ==~ /^(https:\/\/|ssh:\/\/|git@).+$/)) {
+                        error('ADDONS_REPOSITORY must be an https, ssh or git@ URL')
+                    }
+                    if (!(params.ADDONS_REVISION ==~ /^[A-Za-z0-9._\/-]{1,128}$/)) {
+                        error('ADDONS_REVISION has an invalid format')
+                    }
+                }
+            }
+        }
+        stage('Validate addons') {
+            steps {
+                script {
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "Odoo - Addons Validation [${params.ENVIRONMENT}]",
+                        variables: [odoo_instance: params.ODOO_INSTANCE],
+                        message: 'Jenkins addons validation'
+                    )
+                }
+            }
+        }
+        stage('Production approval') {
+            when { expression { params.ENVIRONMENT == 'prod' } }
+            steps {
+                input message: "Deploy addons to ${params.ODOO_INSTANCE} in production?", ok: 'Deploy'
+            }
+        }
+        stage('Deploy addons') {
+            steps {
+                script {
+                    def variables = [
+                        odoo_instance: params.ODOO_INSTANCE,
+                        addons_repository: params.ADDONS_REPOSITORY,
+                        addons_revision: params.ADDONS_REVISION,
+                        confirm_operation: 'true'
+                    ]
+                    if (params.ENVIRONMENT == 'prod') {
+                        variables.confirm_production = 'true'
+                    }
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "Odoo - Deploy Addons [${params.ENVIRONMENT}]",
+                        variables: variables,
+                        message: "Jenkins addons deploy ${params.ODOO_INSTANCE} ${params.ADDONS_REVISION}"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success { echo 'Odoo addons deployed. Module upgrades are a separate approved operation.' }
+        failure { echo 'Odoo addons deployment failed; inspect the Semaphore task history.' }
+    }
+}

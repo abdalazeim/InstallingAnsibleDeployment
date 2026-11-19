@@ -1,5 +1,7 @@
 # INSTALLATION_GUIDE.md — تثبيت Ansible على Ubuntu Server (المرحلة 1)
 
+> **دليل تاريخي.** التثبيت المدعوم حالياً هو [`installation/install.sh`](installation/install.sh)؛ راجع [`README.md`](README.md). محتوى هذا الملف يوثّق واجهة المرحلة 1 القديمة.
+
 > **النطاق:** تثبيت + تحقق فقط. لا تكامل، لا Playbooks إنتاجية، لا Collections تكامل، لا Docker/Traefik/Jenkins.  
 > **مهم:** نفّذ مباشرة على Ubuntu. راجع كل خطوة. لا تحذف ملفات/إعدادات. لا تدّعِ نجاح اختبار لم يُنفذ.
 

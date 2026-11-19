@@ -36,6 +36,7 @@
     - --noinput
   changed_when: true
   no_log: true
+  become: true
   become_user: '{{ app.user }}'
   args:
     chdir: '{{ app.directory }}/current/source'

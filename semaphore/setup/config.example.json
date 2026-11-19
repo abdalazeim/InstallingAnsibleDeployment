@@ -4,6 +4,7 @@
   "repository_url": "/workspace",
   "repository_branch": "main",
   "environments": ["build", "dev", "staging", "prod"],
+  "report_dir": "/reports",
   "schedules": [
     {
       "name": "Development server health",

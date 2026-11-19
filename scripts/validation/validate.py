@@ -33,10 +33,15 @@ def validate():
         path=(ROOT/entry['playbook']).resolve()
         if not path.is_relative_to(ROOT) or not path.is_file(): errors.append('Missing/unsafe playbook '+entry['id'])
         else:
-            play=yaml.safe_load(path.read_text())[0]
+            text=path.read_text()
+            play=yaml.safe_load(text)[0]
             if play['vars']['operation_risk']!=entry['risk']: errors.append('Risk mismatch '+entry['id'])
             if not any(t.get('ansible.builtin.import_role',{}).get('name')=='common' for t in play.get('pre_tasks',[])):
                 errors.append('Missing safety policy '+entry['id'])
+            if 'import_playbook: ../_guard.yml' not in text:
+                errors.append('Missing empty-target guard '+entry['id'])
+    if not (ROOT/'inventories'/'build'/'hosts.yml').is_file():
+        errors.append('Missing inventories/build/hosts.yml required by verification')
     # Resolve includes and templates in every supported role, not historical scaffolds.
     for path in (ROOT/'roles').glob('*/tasks/*.yml'):
         role=path.parents[1]

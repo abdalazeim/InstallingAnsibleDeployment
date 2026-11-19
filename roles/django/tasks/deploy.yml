@@ -74,12 +74,14 @@
     dest: '{{ app.directory }}/releases/{{ deployment_version }}/source'
     force: false
     accept_hostkey: false
+  become: true
   become_user: '{{ app.user }}'
 - name: Install dependencies into release virtual environment
   ansible.builtin.pip:
     requirements: '{{ app.directory }}/releases/{{ deployment_version }}/source/requirements.txt'
     virtualenv: '{{ app.directory }}/releases/{{ deployment_version }}/venv'
     virtualenv_command: python3 -m venv
+  become: true
   become_user: '{{ app.user }}'
 - name: Check Django configuration
   ansible.builtin.command:
@@ -92,6 +94,7 @@
   args:
     chdir: '{{ app.directory }}/releases/{{ deployment_version }}/source'
   environment: '{{ app.environment }}'
+  become: true
   become_user: '{{ app.user }}'
 - name: Collect release static files
   ansible.builtin.command:
@@ -105,6 +108,7 @@
   args:
     chdir: '{{ app.directory }}/releases/{{ deployment_version }}/source'
   environment: '{{ app.environment }}'
+  become: true
   become_user: '{{ app.user }}'
 - name: Install protected environment file
   ansible.builtin.template:

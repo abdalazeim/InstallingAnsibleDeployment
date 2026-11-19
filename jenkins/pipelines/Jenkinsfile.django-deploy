@@ -1,0 +1,62 @@
+@Library('infrastructure') _
+
+pipeline {
+    agent any
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+    }
+    parameters {
+        string(name: 'SEMAPHORE_URL', defaultValue: 'https://semaphore.example.internal', description: 'Semaphore base URL')
+        string(name: 'SEMAPHORE_PROJECT_ID', defaultValue: '1', description: 'Semaphore project ID')
+        string(name: 'DJANGO_APPLICATION', defaultValue: '', description: 'Instance key from django_applications')
+        string(name: 'DEPLOYMENT_VERSION', defaultValue: '', description: 'Release identifier (alphanumeric, dot, underscore, dash)')
+        choice(name: 'ENVIRONMENT', choices: ['staging', 'prod'], description: 'Target environment')
+    }
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    if (!params.DJANGO_APPLICATION?.trim()) {
+                        error('DJANGO_APPLICATION is required')
+                    }
+                    if (!(params.DEPLOYMENT_VERSION ==~ /^[A-Za-z0-9._-]{1,64}$/)) {
+                        error('DEPLOYMENT_VERSION must match [A-Za-z0-9._-]{1,64}')
+                    }
+                }
+            }
+        }
+        stage('Production approval') {
+            when { expression { params.ENVIRONMENT == 'prod' } }
+            steps {
+                input message: "Deploy ${params.DJANGO_APPLICATION} ${params.DEPLOYMENT_VERSION} to production?", ok: 'Deploy'
+            }
+        }
+        stage('Deploy through Semaphore') {
+            steps {
+                script {
+                    def variables = [
+                        django_application: params.DJANGO_APPLICATION,
+                        deployment_version: params.DEPLOYMENT_VERSION,
+                        confirm_operation: 'true'
+                    ]
+                    if (params.ENVIRONMENT == 'prod') {
+                        variables.confirm_production = 'true'
+                    }
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "Django - Deploy Application [${params.ENVIRONMENT}]",
+                        variables: variables,
+                        message: "Jenkins deploy ${params.DJANGO_APPLICATION} ${params.DEPLOYMENT_VERSION}"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success { echo 'Django deployment finished successfully.' }
+        failure { echo 'Django deployment failed; inspect the Semaphore task history.' }
+    }
+}

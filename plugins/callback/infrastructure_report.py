@@ -15,7 +15,8 @@ class CallbackModule(CallbackBase):
     CALLBACK_NEEDS_ENABLED=True
 
     def v2_playbook_on_stats(self,stats):
-        folder=Path(os.environ.get('INFRASTRUCTURE_REPORT_DIR',str(Path.cwd()/'reports')))
+        default=Path('/reports') if Path('/reports').is_dir() else Path.cwd()/'reports'
+        folder=Path(os.environ.get('INFRASTRUCTURE_REPORT_DIR',str(default)))
         run_id=os.environ.get('INFRASTRUCTURE_RUN_ID',uuid.uuid4().hex)
         if not re.fullmatch(r'[A-Za-z0-9_-]+',run_id):
             self._display.warning('Invalid report ID; report not written')

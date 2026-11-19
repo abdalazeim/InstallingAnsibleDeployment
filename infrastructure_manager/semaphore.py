@@ -143,8 +143,12 @@ class Provisioner:
             variables.update(self.config.get('environment_variables',{}).get(env,{}))
             if any(k.startswith('confirm_') and v for k,v in variables.items()):
                 raise ValueError('Confirmation flags cannot be enabled permanently in an environment')
+            task_env={'ANSIBLE_CONFIG':'ansible.cfg'}
+            report_dir=self.config.get('report_dir','/reports')
+            if report_dir:
+                task_env['INFRASTRUCTURE_REPORT_DIR']=report_dir
             environments[env]=self.ensure(base+'/environment',{'project_id':pid,'name':'Infrastructure - '+env,
-                'json':json.dumps(variables,sort_keys=True),'env':json.dumps({'ANSIBLE_CONFIG':'ansible.cfg'})})['id']
+                'json':json.dumps(variables,sort_keys=True),'env':json.dumps(task_env,sort_keys=True)})['id']
             for operation_id in selected_ops:
                 operation=self.catalog[operation_id]
                 surveys=[]

@@ -1,0 +1,67 @@
+@Library('infrastructure') _
+
+pipeline {
+    agent any
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+    }
+    parameters {
+        string(name: 'SEMAPHORE_URL', defaultValue: 'https://semaphore.example.internal', description: 'Semaphore base URL')
+        string(name: 'SEMAPHORE_PROJECT_ID', defaultValue: '1', description: 'Semaphore project ID')
+        choice(name: 'ENVIRONMENT', choices: ['staging', 'prod'], description: 'Target environment')
+        string(name: 'COMPOSE_DIRECTORY', defaultValue: '', description: 'Absolute compose project directory on the target')
+        string(name: 'COMPOSE_PROJECT', defaultValue: '', description: 'Compose project name')
+        booleanParam(name: 'BACKUP_VERIFIED', defaultValue: false, description: 'A recent verified backup exists')
+    }
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    if (!params.COMPOSE_DIRECTORY?.startsWith('/')) {
+                        error('COMPOSE_DIRECTORY must be an absolute path')
+                    }
+                    if (!(params.COMPOSE_PROJECT ==~ /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,62}$/)) {
+                        error('COMPOSE_PROJECT must match [a-zA-Z0-9][a-zA-Z0-9_-]{0,62}')
+                    }
+                    if (!params.BACKUP_VERIFIED) {
+                        error('Confirm BACKUP_VERIFIED before updating a running deployment')
+                    }
+                }
+            }
+        }
+        stage('Production approval') {
+            when { expression { params.ENVIRONMENT == 'prod' } }
+            steps {
+                input message: "Update compose project ${params.COMPOSE_PROJECT} in production?", ok: 'Update'
+            }
+        }
+        stage('Update through Semaphore') {
+            steps {
+                script {
+                    def variables = [
+                        compose_directory: params.COMPOSE_DIRECTORY,
+                        compose_project: params.COMPOSE_PROJECT,
+                        deployment_backup_verified: 'true',
+                        confirm_operation: 'true'
+                    ]
+                    if (params.ENVIRONMENT == 'prod') {
+                        variables.confirm_production = 'true'
+                    }
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "Docker - Compose Update [${params.ENVIRONMENT}]",
+                        variables: variables,
+                        message: "Jenkins compose update ${params.COMPOSE_PROJECT}"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success { echo 'Compose update finished; verify health in the Semaphore task history.' }
+        failure { echo 'Compose update failed; follow the deployment rollback notes.' }
+    }
+}

@@ -10,8 +10,10 @@ exec > >(tee "$report") 2>&1
 ansible --version
 ansible-playbook --version
 ansible-galaxy collection list
+ansible-lint
 python -m pytest -q
 python scripts/validation/validate.py --syntax
+python scripts/reporting/render_catalog.py --check
 ansible localhost -i localhost, -c local -m ansible.builtin.ping
 ansible-playbook -i inventories/build/hosts.yml playbooks/system/verify.yml
 printf 'Installation verification completed. This does not validate application deployments or Semaphore.\n'

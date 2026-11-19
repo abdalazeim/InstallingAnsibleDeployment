@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: monitoring
       tasks_from: disk
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

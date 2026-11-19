@@ -1,0 +1,26 @@
+---
+# Fail closed when an inventory or limit selects no targets.
+# This play is imported at the end of every catalog playbook. Ansible skips a
+# play that matches zero hosts, so a guard inside the main play can never run
+# for an empty inventory. This play always matches the implicit/controller
+# localhost and inspects the *requested* target selection instead.
+- name: Validate target selection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    requested_hosts: '{{ target_hosts | default("all") }}'
+    effective_pattern: >-
+      {{ ansible_limit | default("", true)
+         if (ansible_limit | default("", true)) | length > 0
+         else requested_hosts }}
+  tasks:
+    - name: Refuse empty target selection
+      ansible.builtin.assert:
+        that:
+          - query('ansible.builtin.inventory_hostnames', effective_pattern) | length > 0
+        fail_msg: >-
+          No hosts match '{{ effective_pattern }}'. Refusing to report success
+          for an empty target selection; configure the inventory or limit first.
+        success_msg: Target selection contains hosts.
+        quiet: true

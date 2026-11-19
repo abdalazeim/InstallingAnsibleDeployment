@@ -7,9 +7,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+.ansible/
 *.egg-info/
-build/
-dist/
+/build/
+/dist/
 reports/*
 !reports/.gitkeep
 *.pem
@@ -17,4 +18,7 @@ reports/*
 *.vault-password
 semaphore/config.local.json
 inventories/*/host_vars/
+host_vars/*
+!host_vars/.gitkeep
 control-plane/semaphore/key-acess.txt
+legacy/control-plane/semaphore/key-acess.txt

@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: django
       tasks_from: deploy
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

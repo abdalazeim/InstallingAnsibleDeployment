@@ -12,12 +12,13 @@ services:
       SEMAPHORE_ADMIN_EMAIL: ${SEMAPHORE_ADMIN_EMAIL:?Set admin email}
       SEMAPHORE_ADMIN_PASSWORD: ${SEMAPHORE_ADMIN_PASSWORD:?Set admin password}
       SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEMAPHORE_ACCESS_KEY_ENCRYPTION:?Set encryption key}
+      INFRASTRUCTURE_REPORT_DIR: /reports
       TZ: ${TZ:-UTC}
     volumes:
       - semaphore-data:/var/lib/semaphore
       - ${INFRASTRUCTURE_PROJECT:?Set absolute project path}:/workspace:ro
       - ${SEMAPHORE_KNOWN_HOSTS:?Set trusted known_hosts path}:/etc/ssh/ssh_known_hosts:ro
       - ${INFRASTRUCTURE_REPORTS:?Set writable reports path}:/reports
-    # Docker socket is intentionally not mounted. Targets are accessed through SSH.
+# Docker socket is intentionally not mounted. Targets are accessed through SSH.
 volumes:
   semaphore-data:

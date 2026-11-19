@@ -1,0 +1,22 @@
+{
+  "url": "http://127.0.0.1:3000",
+  "project_name": "Infrastructure Automation",
+  "repository_url": "git@github.com:abdalazeim/InstallingAnsibleDeployment.git",
+  "repository_branch": "main",
+  "environments": ["staging", "prod"],
+  "report_dir": "/reports",
+  "ssh_private_key_env": "SEMAPHORE_SSH_PRIVATE_KEY",
+  "vault_password_env": "SEMAPHORE_VAULT_PASSWORD",
+  "ssh_login": "ubuntu",
+  "operations": [
+    "system.info",
+    "system.health_check",
+    "system.monitoring",
+    "docker.health_check",
+    "docker.list_containers",
+    "postgresql.health_check",
+    "odoo.health_check",
+    "networking.ssl_check",
+    "monitoring.overview"
+  ]
+}

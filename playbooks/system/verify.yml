@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: system
       tasks_from: verify
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

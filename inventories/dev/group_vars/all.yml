@@ -1,0 +1,13 @@
+---
+# Development environment defaults.
+# `localhost` is the current development machine. Do not add production
+# credentials or real customer data here.
+infrastructure_environment: dev
+
+confirm_operation: false
+confirm_production: false
+confirm_destructive_operation: false
+confirm_reboot: false
+
+backup_root: /var/backups/infrastructure
+retention_days: 7

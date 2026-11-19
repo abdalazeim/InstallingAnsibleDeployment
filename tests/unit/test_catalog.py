@@ -24,3 +24,13 @@ def test_all_catalog_playbooks_enforce_policy():
         play=yaml.safe_load((ROOT/operation['playbook']).read_text())[0]
         assert play['pre_tasks'][0]['ansible.builtin.import_role']['name']=='common'
         assert play['vars']['operation_risk']==operation['risk']
+
+
+def test_generated_template_documentation_is_current():
+    spec=importlib.util.spec_from_file_location('render_catalog',ROOT/'scripts/reporting/render_catalog.py')
+    module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    catalog=json.loads((ROOT/'semaphore/templates/catalog.json').read_text())
+    expected=module.render(catalog)
+    actual=(ROOT/'docs/semaphore/TEMPLATES_CATALOG.md').read_text()
+    assert actual==expected, 'run python3 scripts/reporting/render_catalog.py'
+

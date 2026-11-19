@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: backup
       tasks_from: list
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

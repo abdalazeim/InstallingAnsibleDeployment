@@ -1,0 +1,85 @@
+@Library('infrastructure') _
+
+// Runs one approved infrastructure operation through Semaphore.
+// EXTRA_VARIABLES is a JSON object of Ansible variables; it is parsed, never
+// evaluated, and the playbook validates every value.
+pipeline {
+    agent any
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+    }
+    parameters {
+        string(name: 'SEMAPHORE_URL', defaultValue: 'https://semaphore.example.internal', description: 'Semaphore base URL')
+        string(name: 'SEMAPHORE_PROJECT_ID', defaultValue: '1', description: 'Semaphore project ID')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'prod'], description: 'Target environment')
+        choice(name: 'OPERATION', choices: [
+            'system.health_check',
+            'system.monitoring',
+            'monitoring.overview',
+            'system.update',
+            'system.packages',
+            'system.users_manage',
+            'system.ssh_configure'
+        ], description: 'Approved catalog operation')
+        text(name: 'EXTRA_VARIABLES', defaultValue: '{}', description: 'JSON object of operation inputs')
+    }
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    def parsed = readJSON(text: params.EXTRA_VARIABLES)
+                    if (!(parsed instanceof Map)) {
+                        error('EXTRA_VARIABLES must be a JSON object')
+                    }
+                }
+            }
+        }
+        stage('Production approval') {
+            when {
+                expression { params.ENVIRONMENT == 'prod' && params.OPERATION == 'system.update' }
+            }
+            steps {
+                input message: "Run ${params.OPERATION} in production?", ok: 'Run'
+            }
+        }
+        stage('Run through Semaphore') {
+            steps {
+                script {
+                    def names = [
+                        'system.health_check': ['System - Health Check', 'read'],
+                        'system.monitoring'  : ['System - Resource Monitoring', 'read'],
+                        'monitoring.overview': ['Monitoring - Infrastructure Overview', 'read'],
+                        'system.update'      : ['System - Update Packages', 'change'],
+                        'system.packages'    : ['System - Manage Packages', 'change'],
+                        'system.users_manage': ['System - User Management', 'change'],
+                        'system.ssh_configure': ['System - SSH Configuration', 'change']
+                    ]
+                    def entry = names[params.OPERATION]
+                    if (entry == null) {
+                        error("Unsupported operation ${params.OPERATION}")
+                    }
+                    def variables = readJSON(text: params.EXTRA_VARIABLES)
+                    if (entry[1] != 'read') {
+                        variables.confirm_operation = 'true'
+                        if (params.ENVIRONMENT == 'prod') {
+                            variables.confirm_production = 'true'
+                        }
+                    }
+                    infrastructureSemaphore(
+                        url: params.SEMAPHORE_URL,
+                        projectId: params.SEMAPHORE_PROJECT_ID,
+                        templateName: "${entry[0]} [${params.ENVIRONMENT}]",
+                        variables: variables,
+                        message: "Jenkins ${params.OPERATION}"
+                    )
+                }
+            }
+        }
+    }
+    post {
+        success { echo 'Infrastructure operation finished successfully.' }
+        failure { echo 'Infrastructure operation failed; inspect the Semaphore task history.' }
+    }
+}

@@ -35,7 +35,7 @@ if [[ ! -x "$runtime/bin/python" ]]; then
 fi
 run_operator "$operator_home/.local/bin/uv" pip install --python "$runtime/bin/python" \
   'ansible-core==2.21.6' 'ansible-lint==26.11.0' 'pytest>=8,<10' 'PyYAML>=6,<7' 'Jinja2>=3.1,<4' "$target"
-run_operator "$runtime/bin/ansible-galaxy" collection install -r "$target/collections/requirements.yml"
+run_operator "$runtime/bin/ansible-galaxy" collection install -r "$target/requirements.yml"
 install -d -m 0755 /etc/infrastructure-manager
 printf '%s\n' "$target" > /etc/infrastructure-manager/project-path
 chmod 0644 /etc/infrastructure-manager/project-path

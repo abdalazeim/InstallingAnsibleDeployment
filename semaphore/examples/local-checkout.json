@@ -1,0 +1,8 @@
+{
+  "url": "http://127.0.0.1:3000",
+  "project_name": "Infrastructure Automation",
+  "repository_url": "/workspace",
+  "repository_branch": "main",
+  "environments": ["build", "dev", "staging", "prod"],
+  "report_dir": "/reports"
+}

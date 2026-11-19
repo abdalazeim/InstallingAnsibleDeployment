@@ -16,3 +16,6 @@
     ansible.builtin.include_role:
       name: jenkins
       tasks_from: status
+
+- name: Validate target selection
+  import_playbook: ../_guard.yml

@@ -1,0 +1,24 @@
+---
+# ansible-lint configuration for the supported root tree.
+# Historical code under legacy/ is preserved for reference and is excluded from
+# quality gates; it is not part of the supported path.
+profile: basic
+exclude_paths:
+  - legacy/
+  - .ansible/
+  - .venv/
+  - .cache/
+  - reports/
+  - inventory/
+  - semaphore/templates/catalog.json
+warn_list:
+  - experimental
+  - role-name
+  - fqcn
+  - var-naming
+  - name
+skip_list:
+  - yaml[line-length]
+  - yaml[comments]
+  - yaml[document-start]
+  - no-handler

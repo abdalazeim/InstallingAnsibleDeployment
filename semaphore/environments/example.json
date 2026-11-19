@@ -1,0 +1,16 @@
+{
+  "environment_variables": {
+    "build": {
+      "retention_days": 3
+    },
+    "dev": {
+      "retention_days": 7
+    },
+    "staging": {
+      "retention_days": 14
+    },
+    "prod": {
+      "retention_days": 30
+    }
+  }
+}

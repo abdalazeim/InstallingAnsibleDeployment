@@ -1,5 +1,12 @@
 # دراسة المشروع — InstallingAnsibleDeployment
 
+> **ملاحظة تاريخية (2026-11-18):** هذه الدراسة أُجريت على الشجرة القديمة قبل
+> إعادة الهيكلة. المسارات المذكورة أدناه (مثل `01-Installation/`،
+> `02-Integration/`، `automation/`، `control-plane/`، `InfrastructureAutomation/`)
+> نُقلت الآن إلى `legacy/` وهي غير مدعومة. المسار المدعوم الحالي هو الجذر:
+> `playbooks/` و`roles/` و`inventories/` و`semaphore/`. راجع
+> `docs/FINAL_IMPLEMENTATION_REPORT.md` و`docs/REPOSITORY_AUDIT.md`.
+
 تاريخ الفحص: 2026-11-18. النطاق: النسخة المحلية الحالية. هذا تحليل للملفات، وليس تقرير نجاح نشر على Ubuntu.
 
 ## 1. هوية المشروع
@@ -83,7 +90,7 @@ Playbook الإصدار 17 وPlaybook الإصدار 19 يستهدفان مجم�
 ### إعدادات وحماية الوصول
 
 - inventories تستخدم `StrictHostKeyChecking=no` رغم تفعيل host_key_checking في ansible.cfg.
-- الملف المتتبع `control-plane/semaphore/key-acess.txt` يتضمن تعيينات بأسماء كلمة مرور المدير ومفتاح تشفير Semaphore. لم أنقل قيمه إلى التقرير. يلزم فحص ما إذا كانت قيمًا حقيقية والتعامل مع ذلك قبل مشاركة المستودع؛ تجاهل `.env` لا يشمل هذا الملف.
+- الملف `control-plane/semaphore/key-acess.txt` (الآن تحت `legacy/`) كان متتبعًا ويتضمن تعيينات بأسماء كلمة مرور المدير ومفتاح تشفير Semaphore. لم أنقل قيمه إلى التقرير. أُزيل من تتبّع Git وبقي محليًا ومتجاهلًا؛ يجب اعتبار أي قيمة نُشرت سابقًا مخترقة وتدويرها.
 - قوالب SSH تستبدل إعداد الخادم وتحدد AllowUsers دون فحص `sshd -t` ظاهر قبل التطبيق.
 - مفاتيح SSH داخل `group_vars/all.yml` تحتوي مسافات مثل `ssh PasswordAuthentication`، بينما القالب يستعمل قيمًا ثابتة لهذه الخيارات.
 

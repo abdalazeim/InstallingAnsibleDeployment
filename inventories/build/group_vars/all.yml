@@ -1,0 +1,14 @@
+---
+# Build environment defaults.
+# Used by installation verification and the optional Semaphore smoke template.
+# Never store credentials in group_vars; use Ansible Vault or the Semaphore
+# Key Store. Instance definitions belong in host_vars/<host>.yml (ignored).
+infrastructure_environment: build
+
+confirm_operation: false
+confirm_production: false
+confirm_destructive_operation: false
+confirm_reboot: false
+
+backup_root: /var/backups/infrastructure
+retention_days: 3
