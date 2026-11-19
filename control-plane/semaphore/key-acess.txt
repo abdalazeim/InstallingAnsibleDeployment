@@ -1,3 +1,0 @@
-# Credential values removed from the working tree.
-# Supply SEMAPHORE_ADMIN_PASSWORD and SEMAPHORE_ACCESS_KEY_ENCRYPTION outside Git.
-# Rotate any values previously committed; this change does not erase Git history.
